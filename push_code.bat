@@ -1,1 +1,1 @@
-aws s3 cp --recursive "C:\Users\defaultuser0\Documents\alexa_projects\alexa_workdir\nutritionInterface\lambda\custom" s3://nutrition-help-code/
+aws s3 cp --recursive "C:\Users\josh\Documents\GitHub\KA1901\lambda\custom" s3://nutrition-information/
