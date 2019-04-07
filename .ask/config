@@ -13,6 +13,30 @@
             }
           }
         }
+      },
+      "resources": {
+        "manifest": {
+          "eTag": "a197ccbc6553fcb02b4957892d8e22c1"
+        },
+        "interactionModel": {
+          "en-US": {
+            "eTag": "ae0dd6c2ca11d63e674f66b5cbe48248"
+          }
+        },
+        "lambda": [
+          {
+            "alexaUsage": [
+              "custom/default"
+            ],
+            "arn": "arn:aws:lambda:us-east-1:349221790638:function:NutritionIntake",
+            "awsRegion": "us-east-1",
+            "codeUri": "lambda/custom",
+            "functionName": "NutritionIntake",
+            "handler": "index.handler",
+            "revisionId": "c1d8a39c-2e36-4457-9837-1ed8667469fa",
+            "runtime": "nodejs8.10"
+          }
+        ]
       }
     }
   }
