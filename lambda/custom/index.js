@@ -1,6 +1,8 @@
 const Alexa = require('ask-sdk-core');
 const apiRequest = require('./apiRequest');
 const db = require('./dbconnect');
+const http = require('http');
+
 
 /* test */
 
@@ -193,6 +195,32 @@ function normalizeWeights(amount, results) {
 *  @return - string value with food search results to be said by alexa to user
 **/
 function buildFoodSearchResponse(results, handlerInput, attribute) {
+  
+/*                    TESTING IMAGE DISPLAY                    */
+  var imgAddress = "";
+  var API = 'https://www.googleapis.com/customsearch/v1?cx=008772782087076767387:nrisssm2-gy&key=AIzaSyCH88Id6_SbnIQ8U6aCOLMRlw4bAZrly0o&num=1&imgSize=large&searchType=image&imgType=photo&alt=json&q='
+  API = API + results.name;
+  API = API + '/';
+
+
+  getRemoteData(API)
+  .then((response) => {
+  const data = JSON.parse(response);
+  imgAddress = `${data.items[0].link}`;
+
+  const bodyTemplate2 = new Alexa.templateBuilders.BodyTemplate2Builder();          
+
+  var template = bodyTemplate2.setTitle("Prototype")
+              .setImage(makeImage(imgAddress))
+              .setBackgroundImage(makeImage(imgAddress))
+              .setTextContent(makeRichText('Test'),null, null)
+              .build();
+                      
+  this.response.speak("Rendering Variable")
+                      .renderTemplate(template)
+
+/*                    TESTING IMAGE DISPLAY                    */
+
   const session = handlerInput.attributesManager.getSessionAttributes();
   /* we can randomise the start so responses are less repetive */
   var speechText = getRandom(session.lastFoodItemResponse, [
@@ -993,3 +1021,30 @@ exports.handler = skillBuilder
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
+
+const getRemoteData = function (url){
+    return new Promise((resolve, reject) => {
+        const client = url.startsWith('https') ? require('https') : require ('http');
+        const request = client.get(url, (response) => {
+         if (response.statusCode < 200 || response.statusCode > 299){
+            reject(new Error('Failure with status code' + response.StatusCode >299));
+            }
+
+            const body = [];
+            response.on('data', (chunk) => body.push(chunk));
+            response.on('end', () => resolve(body.join('')));
+        });
+         request.on('error', (err) => reject(err))
+        })
+};
+
+function supportsDisplay() {
+    var hasDisplay =
+    this.event.context &&
+    this.event.context.System &&
+    this.event.context.System.device &&
+    this.event.context.System.device.supportedInterfaces &&
+    this.event.context.System.device.supportedInterfaces.Display
+
+    return hasDisplay;
+}
