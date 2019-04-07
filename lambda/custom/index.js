@@ -2,6 +2,8 @@ const Alexa = require('ask-sdk-core');
 const apiRequest = require('./apiRequest');
 const db = require('./dbconnect');
 
+/* test */
+
 /* get random response fom alexa as long as not equal to the last response 
 *  @param lastRespone - string value of last response
 *  @param arr - array with string options for new response
