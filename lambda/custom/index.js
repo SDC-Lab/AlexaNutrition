@@ -4,6 +4,26 @@ const db = require('./dbconnect');
 const http = require('http');
 
 
+const AlexaImage = require("alexa-sdk");
+
+
+
+const makeRichText = AlexaImage.utils.TextUtils.makeRichText;
+const makePlainText = AlexaImage.utils.TextUtils.makePlainText;
+const makeImage = AlexaImage.utils.ImageUtils.makeImage;
+
+var fillerTextContent ="test ";
+var imgAddress = "https://ka1901.scem.westernsydney.edu.au/alexatest.jpg";
+
+
+const bodyTemplate2 = new Alexa.templateBuilders.BodyTemplate2Builder();
+                    
+var template = bodyTemplate2.setTitle("Prototype")
+                            .setImage(makeImage(imgAddress))
+                            .setBackgroundImage(makeImage(imgAddress))
+                            .setTextContent(makeRichText('' + fillerTextContent + ''),null, null)
+                            .build();
+
 /* test */
 
 /* get random response fom alexa as long as not equal to the last response 
@@ -207,6 +227,7 @@ function buildFoodSearchResponse(results, handlerInput, attribute) {
   speechText += `${Math.floor(results.serving.metric_serving_amount)} gram serving`;
   speechText += ` of ${results.name} contains`;
   var atts = ['protein', 'fat', 'sugar', 'carbohydrate'];
+
   if(!attribute) {
     for(var i = 0; i < atts.length; i++) {
       if(results.serving[atts[i]] != 0) {
@@ -374,6 +395,9 @@ async function createDailyIntakeResponse(age, gender) {
   });
 }
 
+
+ 
+
 /* ------------------- Our alexa handlers for the different intents ---------------------- */
 /* --------------------------------------------------------------------------------------- */
 
@@ -426,6 +450,36 @@ const LaunchRequestHandler = {
 /* food item search intent handler, validates whether or not the food slot 
 *  is filled and then calls a function to search the fat secret database
 **/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const FoodSearchIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -470,6 +524,12 @@ const FoodSearchIntentHandler = {
     results = await searchFoodItem(currentIntent.slots['food'].value);
     results = normalizeWeights(currentIntent.slots['weight'].value, results);
     speechText = buildFoodSearchResponse(results, handlerInput, attributeValue);
+
+/* IMAGE TESTING */
+                
+
+/* IMAGE TESTING */  
+
 
     attr = { 
       lastFoodItemResponse: speechText,
@@ -997,3 +1057,13 @@ exports.handler = skillBuilder
   .addErrorHandlers(ErrorHandler)
   .lambda();
 
+  function supportsDisplay() {
+    var hasDisplay =
+    this.event.context &&
+    this.event.context.System &&
+    this.event.context.System.device &&
+    this.event.context.System.device.supportedInterfaces &&
+    this.event.context.System.device.supportedInterfaces.Display
+
+    return hasDisplay;
+}
