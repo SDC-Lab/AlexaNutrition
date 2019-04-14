@@ -478,16 +478,13 @@ const FoodSearchIntentHandler = {
     imgAddress += userin;
     imgAddress += '.jpg'  
 
-    if(results.atts == )
-
-
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
         .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
-        .withPrimaryText()
+        .withPrimaryText(speechText)
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
