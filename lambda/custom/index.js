@@ -421,6 +421,95 @@ const LaunchRequestHandler = {
   },
 };
 
+
+const AddUserIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'AddUserIntent';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let ageValue = isSlotValid(request, 'age');
+    let genderValue = isSlotValid(request, 'gender');
+    let speechText = '';
+    let attr;
+
+    /* Get Gender of user */
+    if(!genderValue) {
+      speechText = getRandom(session.lastGenderPrompt, [
+        'what is the gender of the person',
+        'are we talking about a male or a female',
+        'are you asking about a male or a female',
+        'tell me if the person is a female or a male',
+        'what gender is the person',
+        'are they male or female'
+      ]);
+      attr = {lastGenderPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('gender', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    genderValue = getGender(genderValue);
+
+    /* Get Age of user */
+    if(!ageValue) {
+      speechText = getRandom(session.lastAgePrompt, [
+        'what age is the person',
+        'how old is the person',
+        'what age person are we talking about',
+        'tell me how old the person is',
+        'can you tell me how old the person is',
+        'what is the age of the person',
+        'what age are we talking about'
+      ]);
+      attr = {lastAgePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('age', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+
+    } else {
+      /* check that our age is within valid range */
+      if(!validAge(ageValue)) {
+        speechText = getRandom(session.lastAgePrompt, [
+          `${ageValue} is not a valid, repeat the age again please`,
+          `${ageValue} is invalid, tell me the age again`
+        ]);
+        attr = {lastAgePrompt: speechText};
+        addSessionValues(attr, handlerInput);
+  
+        return handlerInput.responseBuilder
+          .speak(speechText)
+          .addElicitSlotDirective('age', currentIntent)
+          .withShouldEndSession(false)
+          .getResponse();
+      }
+    }
+    /* we have all values, get daily intake for database build response and speak */
+    try {
+      speechText = 'Adding user to database!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
+
+
+
+
 /* food item search intent handler, validates whether or not the food slot 
 *  is filled and then calls a function to search the fat secret database
 **/
@@ -1022,6 +1111,7 @@ exports.handler = skillBuilder
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
+    AddUserIntentHandler,
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
     /*standard handlers */
