@@ -1,28 +1,6 @@
 const Alexa = require('ask-sdk-core');
 const apiRequest = require('./apiRequest');
 const db = require('./dbconnect');
-const http = require('http');
-
-
-const AlexaImage = require("alexa-sdk");
-
-
-
-const makeRichText = AlexaImage.utils.TextUtils.makeRichText;
-const makePlainText = AlexaImage.utils.TextUtils.makePlainText;
-const makeImage = AlexaImage.utils.ImageUtils.makeImage;
-
-var fillerTextContent ="test ";
-var imgAddress = "https://ka1901.scem.westernsydney.edu.au/alexatest.jpg";
-
-
-const bodyTemplate2 = new Alexa.templateBuilders.BodyTemplate2Builder();
-                    
-var template = bodyTemplate2.setTitle("Prototype")
-                            .setImage(makeImage(imgAddress))
-                            .setBackgroundImage(makeImage(imgAddress))
-                            .setTextContent(makeRichText('' + fillerTextContent + ''),null, null)
-                            .build();
 
 /* test */
 
@@ -227,7 +205,6 @@ function buildFoodSearchResponse(results, handlerInput, attribute) {
   speechText += `${Math.floor(results.serving.metric_serving_amount)} gram serving`;
   speechText += ` of ${results.name} contains`;
   var atts = ['protein', 'fat', 'sugar', 'carbohydrate'];
-
   if(!attribute) {
     for(var i = 0; i < atts.length; i++) {
       if(results.serving[atts[i]] != 0) {
@@ -395,9 +372,6 @@ async function createDailyIntakeResponse(age, gender) {
   });
 }
 
-
- 
-
 /* ------------------- Our alexa handlers for the different intents ---------------------- */
 /* --------------------------------------------------------------------------------------- */
 
@@ -450,36 +424,6 @@ const LaunchRequestHandler = {
 /* food item search intent handler, validates whether or not the food slot 
 *  is filled and then calls a function to search the fat secret database
 **/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const FoodSearchIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -524,17 +468,39 @@ const FoodSearchIntentHandler = {
     results = await searchFoodItem(currentIntent.slots['food'].value);
     results = normalizeWeights(currentIntent.slots['weight'].value, results);
     speechText = buildFoodSearchResponse(results, handlerInput, attributeValue);
-
-/* IMAGE TESTING */
-                
-
-/* IMAGE TESTING */  
-
-
     attr = { 
       lastFoodItemResponse: speechText,
       lastFoodResult: results
     };
+
+    var userin = `${results.name}`;
+    var imgAddress = "https://ka1901.scem.westernsydney.edu.au/"
+    imgAddress += userin;
+    imgAddress += '.jpg'  
+
+    if(results.atts == )
+
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withPrimaryText()
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate3',
+        token: 'string',
+        backButton: 'HIDDEN',
+        image: myImage,
+        title: `${results.name}`,
+        textContent: primaryText,
+
+      });
+  }
+
     addSessionValues(attr, handlerInput);
     try {
       saveSearchResult(results);
@@ -1035,6 +1001,19 @@ const ErrorHandler = {
   },
 };
 
+
+function supportsDisplay(handlerInput) {
+  var hasDisplay =
+    handlerInput.requestEnvelope.context &&
+    handlerInput.requestEnvelope.context.System &&
+    handlerInput.requestEnvelope.context.System.device &&
+    handlerInput.requestEnvelope.context.System.device.supportedInterfaces &&
+    handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display
+  return hasDisplay;
+
+}
+
+
 /* the lambda function entrypoint, this is where everything is assigned and actually run */
 const skillBuilder = Alexa.SkillBuilders.custom();
 
@@ -1056,14 +1035,3 @@ exports.handler = skillBuilder
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
-
-  function supportsDisplay() {
-    var hasDisplay =
-    this.event.context &&
-    this.event.context.System &&
-    this.event.context.System.device &&
-    this.event.context.System.device.supportedInterfaces &&
-    this.event.context.System.device.supportedInterfaces.Display
-
-    return hasDisplay;
-}
