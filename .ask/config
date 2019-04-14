@@ -1,0 +1,43 @@
+{
+  "deploy_settings": {
+    "default": {
+      "skill_id": "amzn1.ask.skill.09c81da3-e99c-4f6f-905a-04a9ea5a04a8",
+      "was_cloned": false,
+      "merge": {
+        "manifest": {
+          "apis": {
+            "custom": {
+              "endpoint": {
+                "uri": "arn:aws:lambda:us-east-1:349221790638:function:NutritionIntake"
+              }
+            }
+          }
+        }
+      },
+      "resources": {
+        "manifest": {
+          "eTag": "337d05320b35ed20c5ae07b5bef756cb"
+        },
+        "interactionModel": {
+          "en-US": {
+            "eTag": "d42a936f10c2df87747a78474bfd7e08"
+          }
+        },
+        "lambda": [
+          {
+            "alexaUsage": [
+              "custom/default"
+            ],
+            "arn": "arn:aws:lambda:us-east-1:349221790638:function:NutritionIntake",
+            "awsRegion": "us-east-1",
+            "codeUri": "lambda/custom",
+            "functionName": "NutritionIntake",
+            "handler": "index.handler",
+            "revisionId": "69ba6374-9d70-4735-8035-c132141ef035",
+            "runtime": "nodejs8.10"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -472,6 +472,32 @@ const FoodSearchIntentHandler = {
       lastFoodItemResponse: speechText,
       lastFoodResult: results
     };
+
+    var userin = `${results.name}`;
+    var imgAddress = "https://ka1901.scem.westernsydney.edu.au/"
+    imgAddress += userin;
+    imgAddress += '.jpg'  
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withPrimaryText(speechText)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate3',
+        token: 'string',
+        backButton: 'HIDDEN',
+        image: myImage,
+        title: `${results.name}`,
+        textContent: primaryText,
+
+      });
+  }
+
     addSessionValues(attr, handlerInput);
     try {
       saveSearchResult(results);
@@ -971,6 +997,19 @@ const ErrorHandler = {
       .getResponse();
   },
 };
+
+
+function supportsDisplay(handlerInput) {
+  var hasDisplay =
+    handlerInput.requestEnvelope.context &&
+    handlerInput.requestEnvelope.context.System &&
+    handlerInput.requestEnvelope.context.System.device &&
+    handlerInput.requestEnvelope.context.System.device.supportedInterfaces &&
+    handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display
+  return hasDisplay;
+
+}
+
 
 /* the lambda function entrypoint, this is where everything is assigned and actually run */
 const skillBuilder = Alexa.SkillBuilders.custom();

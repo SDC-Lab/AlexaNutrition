@@ -4,6 +4,50 @@
       "invocationName": "nutrition help",
       "intents": [
         {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.MoreIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.NavigateSettingsIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.PageUpIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.PageDownIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.ScrollRightIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.ScrollDownIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.ScrollLeftIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.ScrollUpIntent",
+          "samples": []
+      },
+        {
           "name": "AMAZON.CancelIntent",
           "samples": [
             "cancel that",
@@ -340,6 +384,35 @@
             "can you tell me what {nutrient} is",
             "what exactly is {nutrient}",
             "what is {nutrient}"
+          ]
+        },
+        {
+          "name": "AddUserIntent",
+          "samples": [
+            "I want to register as a new user",
+            "new person",
+            "I am a new person",
+            "New user"
+          ]
+        },
+        {
+          "name": "ExisistingUser",
+          "slots": [
+            {
+              "name": "user",
+              "type": "AMAZON.US_FIRST_NAME"
+            }
+          ],
+          "samples": [
+            "Hi my name is {user}",
+            "Access {user} records",
+            "Access {user}",
+            "Log in as {user}",
+            "Open up {user} records",
+            "My name is {user}",
+            "Name is {user}",
+            "Enter {user} records",
+            "Please open up {user} records"
           ]
         },
         {
