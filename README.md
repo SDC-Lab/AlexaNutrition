@@ -4,7 +4,7 @@ Repo for our WSU professional experience project building an Alexa voice interfa
 /* test */
 
 
-GROUP NAME: KS1802
+GROUP NAME: KA1901
 
 REST API Key - ed9c317b104b4017a1eba0b7d0911e15\
 REST API Shared Secret - 357873c14ef943399eef3f76ca45e3b8
