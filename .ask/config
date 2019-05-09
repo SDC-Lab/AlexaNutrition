@@ -20,7 +20,7 @@
         },
         "interactionModel": {
           "en-US": {
-            "eTag": "d42a936f10c2df87747a78474bfd7e08"
+            "eTag": "fad6f2afbce628dd1786cee55d8aedba"
           }
         },
         "lambda": [
@@ -33,7 +33,7 @@
             "codeUri": "lambda/custom",
             "functionName": "NutritionIntake",
             "handler": "index.handler",
-            "revisionId": "69ba6374-9d70-4735-8035-c132141ef035",
+            "revisionId": "87edeb46-6024-47a3-bdbf-d0eff546464d",
             "runtime": "nodejs8.10"
           }
         ]

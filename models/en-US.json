@@ -388,6 +388,24 @@
         },
         {
           "name": "AddUserIntent",
+          "slots": [
+            {
+              "name": "age",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "weight",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "height",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "gender",
+              "type": "gender"
+            }
+          ],
           "samples": [
             "I want to register as a new user",
             "new person",

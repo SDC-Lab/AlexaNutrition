@@ -192,6 +192,12 @@ function normalizeWeights(amount, results) {
 *                     around protein, carbs, sugar and fat if not 0
 *  @return - string value with food search results to be said by alexa to user
 **/
+
+var proteinatt;
+var fatatt;
+var sugaratt;
+var carbatt;
+
 function buildFoodSearchResponse(results, handlerInput, attribute) {
   const session = handlerInput.attributesManager.getSessionAttributes();
   /* we can randomise the start so responses are less repetive */
@@ -205,10 +211,16 @@ function buildFoodSearchResponse(results, handlerInput, attribute) {
   speechText += `${Math.floor(results.serving.metric_serving_amount)} gram serving`;
   speechText += ` of ${results.name} contains`;
   var atts = ['protein', 'fat', 'sugar', 'carbohydrate'];
+  proteinatt = `${results.serving[atts[0]]}`;
+  fatatt = `${results.serving[atts[1]]}`;
+  sugaratt = `${results.serving[atts[2]]}`;
+  carbatt =  `${results.serving[atts[3]]}`;
+
   if(!attribute) {
     for(var i = 0; i < atts.length; i++) {
       if(results.serving[atts[i]] != 0) {
-        speechText += ` ${results.serving[atts[i]]} grams of ${atts[i]},`;    
+        speechText += ` ${results.serving[atts[i]]} grams of ${atts[i]},`;  
+        //totalresults += `${results.serving[atts[i]]}`;
       }
     }
   } else {
@@ -421,6 +433,92 @@ const LaunchRequestHandler = {
   },
 };
 
+
+const AddUserIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'AddUserIntent';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let ageValue = isSlotValid(request, 'age');
+    let genderValue = isSlotValid(request, 'gender');
+    let speechText = '';
+    let attr;
+
+    /* Get Gender of user */
+    if(!genderValue) {
+      speechText = getRandom(session.lastGenderPrompt, [
+        'what is the gender of the person',
+        'are we talking about a male or a female',
+        'are you asking about a male or a female',
+        'tell me if the person is a female or a male',
+        'what gender is the person',
+        'are they male or female'
+      ]);
+      attr = {lastGenderPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('gender', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    genderValue = getGender(genderValue);
+
+    /* Get Age of user */
+    if(!ageValue) {
+      speechText = getRandom(session.lastAgePrompt, [
+        'what age is the person',
+        'how old is the person',
+        'what age person are we talking about',
+        'tell me how old the person is',
+        'can you tell me how old the person is',
+        'what is the age of the person',
+        'what age are we talking about'
+      ]);
+      attr = {lastAgePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('age', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+
+    } else {
+      /* check that our age is within valid range */
+      if(!validAge(ageValue)) {
+        speechText = getRandom(session.lastAgePrompt, [
+          `${ageValue} is not a valid, repeat the age again please`,
+          `${ageValue} is invalid, tell me the age again`
+        ]);
+        attr = {lastAgePrompt: speechText};
+        addSessionValues(attr, handlerInput);
+  
+        return handlerInput.responseBuilder
+          .speak(speechText)
+          .addElicitSlotDirective('age', currentIntent)
+          .withShouldEndSession(false)
+          .getResponse();
+      }
+    }
+    /* we have all values, get daily intake for database build response and speak */
+    try {
+      speechText = 'Adding user to database!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
+
 /* food item search intent handler, validates whether or not the food slot 
 *  is filled and then calls a function to search the fat secret database
 **/
@@ -472,23 +570,44 @@ const FoodSearchIntentHandler = {
       lastFoodItemResponse: speechText,
       lastFoodResult: results
     };
-
+ 
     var userin = `${results.name}`;
-    var imgAddress = "https://ka1901.scem.westernsydney.edu.au/"
-    imgAddress += userin;
-    imgAddress += '.jpg'  
+    var BGround = "https://ka1901.scem.westernsydney.edu.au/";
+    BGround += userin;
+    BGround += ".jpg";
+
+  
+    //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
+    var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chd=t:";
+    imgAddress += proteinatt;
+    imgAddress += ",";
+    imgAddress += fatatt;
+    imgAddress += ","
+    imgAddress += sugaratt;
+    imgAddress += ","
+    imgAddress += carbatt;
+    imgAddress += "&cht=p&chdl=Protein|Fat|Sugar|Carbs";
+
+  var nextline = " Grams \u{2022}";
+
+  var Displaytext = "Protein: " + proteinatt + nextline + "Fat: " + fatatt + nextline + "Sugar: " + sugaratt + nextline + " Carbs: " + carbatt + nextline;
 
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
         .getImage();
+        
+      const myImage2 = new Alexa.ImageHelper()
+        .addImageInstance(BGround)
+        .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
-        .withPrimaryText(speechText)
+        .withSecondaryText(Displaytext)
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate3',
+        type: 'BodyTemplate2',
+      //  backgroundImage: myImage2,
         token: 'string',
         backButton: 'HIDDEN',
         image: myImage,
@@ -1022,6 +1141,7 @@ exports.handler = skillBuilder
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
+    AddUserIntentHandler,
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
     /*standard handlers */
