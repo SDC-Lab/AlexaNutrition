@@ -1,6 +1,7 @@
 const Alexa = require('ask-sdk-core');
 const apiRequest = require('./apiRequest');
 const db = require('./dbconnect');
+const request = require('request');
 
 /* test */
 
@@ -433,7 +434,13 @@ const LaunchRequestHandler = {
   },
 };
 
-
+function httpGet(info) {
+  request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata', form: info }, function (err, httpResponse, body) {
+      if (err) { return console.log(err); }
+      console.log(body);
+  });
+}
+/* Intent to add a user */
 const AddUserIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -445,9 +452,27 @@ const AddUserIntentHandler = {
     const request = handlerInput.requestEnvelope.request;
     let ageValue = isSlotValid(request, 'age');
     let genderValue = isSlotValid(request, 'gender');
+    let nameValue = isSlotValid(request,'name');
+    let weightValue = isSlotValid(request,'weight');
+    let heightValue = isSlotValid(request,'height');
     let speechText = '';
     let attr;
 
+    /* Firstly get name */
+    if(!nameValue) {
+      speechText = getRandom(session.lastNamePrompt, [
+        'Awesome, Whats your first name?',
+        'Cool, first name please.',
+        'Can I get your first name?'
+      ]);
+      attr = {lastNamePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('name', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
     /* Get Gender of user */
     if(!genderValue) {
       speechText = getRandom(session.lastGenderPrompt, [
@@ -471,40 +496,58 @@ const AddUserIntentHandler = {
     /* Get Age of user */
     if(!ageValue) {
       speechText = getRandom(session.lastAgePrompt, [
-        'what age is the person',
-        'how old is the person',
-        'what age person are we talking about',
-        'tell me how old the person is',
-        'can you tell me how old the person is',
-        'what is the age of the person',
-        'what age are we talking about'
+        'Okay, How old are you?'
       ]);
       attr = {lastAgePrompt: speechText};
       addSessionValues(attr, handlerInput);
-
       return handlerInput.responseBuilder
         .speak(speechText)
         .addElicitSlotDirective('age', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
-
-    } else {
-      /* check that our age is within valid range */
-      if(!validAge(ageValue)) {
-        speechText = getRandom(session.lastAgePrompt, [
-          `${ageValue} is not a valid, repeat the age again please`,
-          `${ageValue} is invalid, tell me the age again`
-        ]);
-        attr = {lastAgePrompt: speechText};
-        addSessionValues(attr, handlerInput);
-  
-        return handlerInput.responseBuilder
-          .speak(speechText)
-          .addElicitSlotDirective('age', currentIntent)
-          .withShouldEndSession(false)
-          .getResponse();
-      }
+  }
+    
+    if(!weightValue) {
+      speechText = getRandom(session.lastWeightPrompt, [
+        'What is your weight in kilograms'
+      ]);
+      attr = {lastWeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('weight', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
     }
+    
+    if(!heightValue) {
+      speechText = getRandom(session.lastHeightPrompt, [
+        'How tall are you in centimeters?'
+      ]);
+      attr = {lastHeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('height', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+
+    let name = currentIntent.slots['name'].value;
+    let gender = genderValue;
+    let age = currentIntent.slots['age'].value;;
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+
+    var info = {
+      age: age,
+      name: name,
+      weight: weight,
+      gender: gender,
+      height: height
+    };
+    httpGet(info);
+
     /* we have all values, get daily intake for database build response and speak */
     try {
       speechText = 'Adding user to database!'
@@ -518,6 +561,290 @@ const AddUserIntentHandler = {
   },
 };
 
+
+/* BMI Calculator */
+const BMIIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'BMIcalcIntent'
+      && handlerInput.requestEnvelope.request !== 'COMPLETED';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let weightValue = isSlotValid(request,'weight');
+    let heightValue = isSlotValid(request,'height');
+    let speechText = '';
+    let attr;
+
+    /* Get Age of user */
+    if(!weightValue) {
+      speechText = getRandom(session.lastWeightPrompt, [
+        'Okay great, to start off with: What is your weight in kilograms'
+      ]);
+      attr = {lastWeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('weight', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    /* Get height of user */
+    if(!heightValue) {
+      speechText = getRandom(session.lastHeightPrompt, [
+        'Great, How tall are you in centimeters?'
+      ]);
+      attr = {lastHeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('height', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+
+try {
+    const newHeight = height / 100;
+    var bmi = weight / (newHeight * newHeight);
+    const bmiRounded = Math.round(bmi * 10) / 10;
+    let weightCategoryOutput = '';
+    
+    if(bmi < 18.5)
+    {
+        weightCategoryOutput = '. You are underweight.';
+    }
+    else if (bmi >= 18.5 && bmi <= 24.9)
+    {
+        weightCategoryOutput = '. You have a healthy weight.';
+    }
+    else if (bmi > 24.9 &&  bmi <= 29.9)
+    {
+        weightCategoryOutput = '. You are overweight.';
+    }
+    else
+    {
+        weightCategoryOutput = '. You are obese.';
+    }
+    speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput;
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
+/* BMR Calculator */
+const BMRIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'BMRcalcIntent'
+      && handlerInput.requestEnvelope.request !== 'COMPLETED';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let weightValue = isSlotValid(request,'weight');
+    let heightValue = isSlotValid(request,'height');
+    let ageValue = isSlotValid(request,'userage');
+    let genderValue = isSlotValid(request,'gender');
+    let speechText = '';
+    let attr;
+
+    /* Get Age of user */
+    if(!weightValue) {
+      speechText = getRandom(session.lastWeightPrompt, [
+        'Okay great, to start off with: What is your weight in kilograms'
+      ]);
+      attr = {lastWeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('weight', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    /* Get height of user */
+    if(!heightValue) {
+      speechText = getRandom(session.lastHeightPrompt, [
+        'Awesome, How tall are you in centimeters?'
+      ]);
+      attr = {lastHeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('height', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    /* Get gender of user */
+    if(!genderValue) {
+      speechText = getRandom(session.lastGenderPrompt, [
+        'Okay, What is your sex?'
+      ]);
+      attr = {lastGenderPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('gender', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    genderValue = getGender(genderValue);
+
+        /* Get age of user */
+    if(!ageValue) {
+        speechText = getRandom(session.lastAgePrompt, [
+          'Okay, How old are you?',
+          'what age is the person',
+          'how old is the person',
+          'what age person are we talking about',
+          'tell me how old the person is',
+          'can you tell me how old the person is',
+          'what is the age of the person',
+          'what age are we talking about'
+        ]);
+        attr = {lastAgePrompt: speechText};
+        addSessionValues(attr, handlerInput);
+        return handlerInput.responseBuilder
+          .speak(speechText)
+          .addElicitSlotDirective('userage', currentIntent)
+          .withShouldEndSession(false)
+          .getResponse();
+    }
+
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+    let age = currentIntent.slots['userage'].value;
+    let gender = genderValue;
+
+try {
+    var bmr;
+    var calc = (10 * weight) + (6.25 * height) - (5 * age);
+      
+    if(gender == "male")
+    {
+      bmr = calc + 5;
+    }
+    else if(gender == "female")
+    {
+      bmr = calc - 161;
+    }
+    speechText = 'Your BMR is ' + bmr + ' kilocalories';
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
+
+const RegisterFoodIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'RegisterFoodIntent'
+      && handlerInput.requestEnvelope.request !== 'COMPLETED';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let UserValue = isSlotValid(request, 'User');
+    let FoodValue = isSlotValid(request, 'Food');
+    let FirstIngredient = isSlotValid(request, 'Ingredient');
+    let NextIngredient = isSlotValid(request, 'NextIngredient');
+    let speechText = '';
+    let attr;
+    /* Get name of user */
+    if(!UserValue) {
+      speechText = getRandom(session.lastUserPrompt, [
+        'Hi, Who am I speaking to?',
+        'Hey, Can I get your name please?',
+        'Hi there, What is your name please?',
+        'Sure thing, Let me first get your name',
+        'Awesome, let me first get your name',
+        'Please state your first name'
+      ]);
+      attr = {lastUserPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('User', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    /* Get Food of user */
+    if(!FoodValue) {
+      speechText = getRandom(session.lastFoodPrompt, [
+        'What meal would you like to register?',
+        'What is the name of the food?',
+        'Sure, what is the name of the food you ate?',
+        'Let me just get the name of the food please.',
+        'Go ahead and tell me the food name please.'
+      ]);
+      attr = {lastFoodPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('Food', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+
+    } 
+       /* Get Ingredients of food */
+       if(!FirstIngredient) {
+        speechText = getRandom(session.firstIngredientPrompt, [
+          'Lets start with the first ingredient',
+          'Okay, what was the first ingredient?',
+          'First ingredient?'
+        ]);
+        attr = {firstIngredientPrompt: speechText};
+        addSessionValues(attr, handlerInput);
+        return handlerInput.responseBuilder
+          .speak(speechText)
+          .addElicitSlotDirective('Ingredient', currentIntent)
+          .withShouldEndSession(false)
+          .getResponse();
+      }
+   // var lastIngredient 
+    if(!NextIngredient){
+      speechText = getRandom(session.NextIngredientPrompt, [
+        'Awesome, Anything else?',
+        'Cool, Is that everything?',
+        'Sounds good, anything else to add?',
+        'Anything else?',
+        'Great, anything else in there?'
+      ]);
+      attr = {NextIngredientPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+          .speak(speechText)
+          .addElicitSlotDirective('NextIngredient', currentIntent)
+          .withShouldEndSession(false)
+          .getResponse();
+    
+    }
+  //  if (NextIngredient === 'Yes'){lastIngredient};
+    try {
+      speechText = 'Registering food!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
 
 /* food item search intent handler, validates whether or not the food slot 
 *  is filled and then calls a function to search the fat secret database
@@ -570,15 +897,9 @@ const FoodSearchIntentHandler = {
       lastFoodItemResponse: speechText,
       lastFoodResult: results
     };
- 
-    var userin = `${results.name}`;
-    var BGround = "https://ka1901.scem.westernsydney.edu.au/";
-    BGround += userin;
-    BGround += ".jpg";
 
-  
     //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
-    var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chd=t:";
+    var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
     imgAddress += proteinatt;
     imgAddress += ",";
     imgAddress += fatatt;
@@ -586,7 +907,7 @@ const FoodSearchIntentHandler = {
     imgAddress += sugaratt;
     imgAddress += ","
     imgAddress += carbatt;
-    imgAddress += "&cht=p&chdl=Protein|Fat|Sugar|Carbs";
+    imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
 
   var nextline = " Grams \u{2022}";
 
@@ -596,10 +917,6 @@ const FoodSearchIntentHandler = {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
         .getImage();
-        
-      const myImage2 = new Alexa.ImageHelper()
-        .addImageInstance(BGround)
-        .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
         .withSecondaryText(Displaytext)
@@ -607,7 +924,6 @@ const FoodSearchIntentHandler = {
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
         type: 'BodyTemplate2',
-      //  backgroundImage: myImage2,
         token: 'string',
         backButton: 'HIDDEN',
         image: myImage,
@@ -1138,12 +1454,15 @@ exports.handler = skillBuilder
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
     KioskScanIntentHandler,
+    RegisterFoodIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
     AddUserIntentHandler,
+    BMIIntentHandler,
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
+    BMRIntentHandler,
     /*standard handlers */
     LaunchRequestHandler,  
     CancelIntentHandler,

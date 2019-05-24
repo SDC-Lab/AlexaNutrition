@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const request = require('request-promise');
 const FS_URL = 'http://platform.fatsecret.com/rest/server.api';
-const FS_API_KEY ='09ec0fe201914c96b2421cda5a911b51';
-const FS_API_SECRET = '197c50b2d6344fcfa16a5adc9d0c7fd0';
+const FS_API_KEY ='996f09e3e0874a9f82a94678bfb92f6e';
+const FS_API_SECRET = 'a0625f6df15449c79131632a5898fa58';
 const KIOSK_URL = 'http://18.202.126.35:8080/nutapp';
 const nonce = require('nonce')();
 const strictUriEncode = require('strict-uri-encode');

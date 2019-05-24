@@ -404,6 +404,10 @@
             {
               "name": "gender",
               "type": "gender"
+            },
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
             }
           ],
           "samples": [
@@ -411,6 +415,86 @@
             "new person",
             "I am a new person",
             "New user"
+          ]
+        },
+        {
+          "name": "BMRcalcIntent",
+          "slots": [
+            {
+              "name": "userage",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "weight",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "height",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "gender",
+              "type": "gender"
+            },
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
+            }
+          ],
+          "samples": [
+            "BMR",
+            "Tell me my BMR",
+            "I would like to know my BMR",
+            "BMR Calculation",
+            "BMR calc",
+            "Launch BMR"
+          ]
+        },
+        {
+          "name": "BMIcalcIntent",
+          "slots": [
+            {
+              "name": "weight",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "height",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "BMI Calculator",
+            "bmi",
+            "I would like to know my BMI",
+            "Launch BMI",
+            "What is my BMI"
+          ]
+        },
+        {
+          "name": "RegisterFoodIntent",
+          "slots": [
+            {
+              "name": "User",
+              "type": "AMAZON.US_FIRST_NAME"
+            },
+            {
+              "name": "Food",
+              "type": "AMAZON.Food"
+            },
+            {
+              "name": "Ingredient",
+              "type": "AMAZON.Food"
+            },
+            {
+              "name": "NextIngredient",
+              "type": "AMAZON.Food"
+            }
+          ],
+          "samples": [
+            "I would like to input my food",
+            "New food",
+            "Food Registration",
+            "Food input"
           ]
         },
         {
