@@ -33,7 +33,7 @@
             "codeUri": "lambda/custom",
             "functionName": "NutritionIntake",
             "handler": "index.handler",
-            "revisionId": "95412462-956c-466f-91d9-2006cb7f151e",
+            "revisionId": "dfc03765-118c-4014-bc48-628bebb6558a",
             "runtime": "nodejs8.10"
           }
         ]

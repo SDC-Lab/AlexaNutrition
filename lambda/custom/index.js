@@ -909,6 +909,17 @@ const FoodSearchIntentHandler = {
     imgAddress += carbatt;
     imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
 
+
+/*
+var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?protein=";
+    imgAddress += proteinatt;
+    imgAddress += "&fat=";
+    imgAddress += fatatt;
+    imgAddress += "&sugar="
+    imgAddress += sugaratt;
+    imgAddress += "&carbs="
+    imgAddress += carbatt;
+    */
   var nextline = " Grams \u{2022}";
 
   var Displaytext = "Protein: " + proteinatt + nextline + "Fat: " + fatatt + nextline + "Sugar: " + sugaratt + nextline + " Carbs: " + carbatt + nextline;
