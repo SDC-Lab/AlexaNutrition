@@ -398,16 +398,10 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     let session = handlerInput.attributesManager.getSessionAttributes();
     let speechText = getRandom(session.lastWelcomeResponse, [
-      'You can ask me for nutrition facts if you like',
-      'I can scan your food item if you like',
-      'You can start off by placing your food in the kiosk scanner',
-      'What food would you like to know about?',
-      'Interested to know what is in your food? Let me scan it and have a look for you',
-      'I can find information on food if you want',
-      'Tell me the food item that you would like to know more about',
-      'What food item do you want me to find for you?',
-      'Lets start by scanning your food or asking me for a nutrition information to find for you'
+      'Hi, I can calculate your body mass, register meals or search for nutrtion information.'
     ]);
+
+    var DisplayText = "Getting Started: Say 'Check BMI', 'Check BMR', 'Register User', 'Tell me facts about Spaghetti'";
     /* formally declare and initialize our session variables */
     const attr = {
       lastFoodResult: null,
@@ -428,7 +422,7 @@ const LaunchRequestHandler = {
     handlerInput.attributesManager.setSessionAttributes(attr);
     return handlerInput.responseBuilder
       .speak(speechText)
-      .withSimpleCard('System entrypoint', speechText)
+      .withSimpleCard('Welcome!', DisplayText)
       .withShouldEndSession(false)
       .getResponse();
   },
@@ -561,7 +555,6 @@ const AddUserIntentHandler = {
   },
 };
 
-
 /* BMI Calculator */
 const BMIIntentHandler = {
   canHandle(handlerInput) {
@@ -577,7 +570,7 @@ const BMIIntentHandler = {
     let heightValue = isSlotValid(request,'height');
     let speechText = '';
     let attr;
-
+    
     /* Get Age of user */
     if(!weightValue) {
       speechText = getRandom(session.lastWeightPrompt, [
@@ -607,6 +600,8 @@ const BMIIntentHandler = {
 
     let weight = currentIntent.slots['weight'].value;
     let height = currentIntent.slots['height'].value;
+    
+    imgAddress = "https://imageresizer.static9.net.au/G37JpddAed9elWExEVkGsB46900=/600x338/smart/http%3A%2F%2Fprod.static9.net.au%2F_%2Fmedia%2FNetwork%2FImages%2F2018%2F04%2F04%2F13%2F08%2F180404_coach_bmi.jpg";
 
 try {
     const newHeight = height / 100;
@@ -626,13 +621,35 @@ try {
     {
         weightCategoryOutput = '. You are overweight.';
     }
-    else
+    else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
+    }
+    else
+    {
+        weightCategoryOutput = '. You are extremely obese.';
     }
     speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput;
     } catch(err) {
       console.log(err);
+    }
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(bmi)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate7',
+        token: 'string',
+        backButton: 'HIDDEN',
+        image: myImage,
+        textContent: primaryText
+      });
     }
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -687,7 +704,7 @@ const BMRIntentHandler = {
     /* Get gender of user */
     if(!genderValue) {
       speechText = getRandom(session.lastGenderPrompt, [
-        'Okay, What is your sex?'
+        'Okay, What is your gender?'
       ]);
       attr = {lastGenderPrompt: speechText};
       addSessionValues(attr, handlerInput);
@@ -725,6 +742,9 @@ const BMRIntentHandler = {
     let age = currentIntent.slots['userage'].value;
     let gender = genderValue;
 
+    imgAddress = "https://images-na.ssl-images-amazon.com/images/I/51UoIzk274L.png";
+
+    
 try {
     var bmr;
     var calc = (10 * weight) + (6.25 * height) - (5 * age);
@@ -741,6 +761,26 @@ try {
     } catch(err) {
       console.log(err);
     }
+
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(speechText)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        image: myImage,
+        textContent: primaryText
+      });
+  }
+
     return handlerInput.responseBuilder
       .speak(speechText)
       .withShouldEndSession(false)
@@ -920,27 +960,96 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
     imgAddress += "&carbs="
     imgAddress += carbatt;
     */
-  var nextline = " Grams \u{2022}";
+  //var nextline = " Grams";
 
-  var Displaytext = "Protein: " + proteinatt + nextline + "Fat: " + fatatt + nextline + "Sugar: " + sugaratt + nextline + " Carbs: " + carbatt + nextline;
+  var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
+  //var testing = "test";
 
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
         .getImage();
      
-      const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(Displaytext)
-        .getTextContent();
+      /*const primaryText = new Alexa.RichTextContentHelper()
+        .withTertiaryText(Displaytext)
+        .getTextContent();*/
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate2',
+        type: 'ListTemplate1',
         token: 'string',
         backButton: 'HIDDEN',
         image: myImage,
         title: `${results.name}`,
-        textContent: primaryText,
-
+        listItems:[
+          {
+            token: 'item_1',
+            textContent:{
+              primaryText:{
+                type:'RichText',
+                text:'<font size="5">Protein</font>'
+              },
+              secondaryText: {
+                type: "PlainText",
+                text: "Serving Size: 100grams"
+              },
+              tertiaryText: {
+                type: "PlainText",
+                text: proteinatt + ' Grams'
+            }
+          }
+          },
+          {
+            token: 'item_2',
+            textContent:{
+              primaryText:{
+                type:'RichText',
+                text:'<font size="5">Fat</font>'
+              },
+              secondaryText: {
+                type: "PlainText",
+                text: "Serving Size: 100grams"
+              },
+              tertiaryText: {
+                type: "PlainText",
+                text: fatatt + ' Grams'
+              }
+            }
+          },
+          {
+            token: 'item_3',
+            textContent:{
+              primaryText:{
+                type:'RichText',
+                text:'<font size="5">Sugar</font>'
+              },
+              secondaryText: {
+                type: "PlainText",
+                text: "Serving Size: 100grams"
+              },
+              tertiaryText: {
+                type: "PlainText",
+                text:  sugaratt + ' Grams'
+              }
+            }
+          },
+          {
+            token: 'item_4',
+            textContent:{
+              primaryText:{
+                type:'RichText',
+                text:'<font size="5">Carbs</font>' 
+              },
+              secondaryText: {
+                type: "PlainText",
+                text: "Serving Size: 100grams"
+              },
+              tertiaryText: {
+                type: "PlainText",
+                text: carbatt + ' Grams'
+              }
+            }
+          }
+        ]
       });
   }
 

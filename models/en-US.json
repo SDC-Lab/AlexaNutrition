@@ -412,6 +412,7 @@
           ],
           "samples": [
             "I want to register as a new user",
+            "register user",
             "new person",
             "I am a new person",
             "New user"
@@ -446,6 +447,7 @@
             "Tell me my BMR",
             "I would like to know my BMR",
             "BMR Calculation",
+            "check BMR",
             "BMR calc",
             "Launch BMR"
           ]
@@ -465,6 +467,8 @@
           "samples": [
             "BMI Calculator",
             "bmi",
+            "check bmi",
+            "Body mass calculator",
             "I would like to know my BMI",
             "Launch BMI",
             "What is my BMI"
