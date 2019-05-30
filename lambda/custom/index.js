@@ -419,10 +419,31 @@ const LaunchRequestHandler = {
       lastStopResponse: '',
       lastNutrientPrompt: ''
     };
+
+    imgAddress = "https://hercanberra.com.au/wp-content/uploads/2018/03/cheap-healthy-food-feature-565x376.jpg";
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withTertiaryText(DisplayText)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        title: 'Nutrition Help',
+        image: myImage,
+        textContent: primaryText
+      });
+  }
+
     handlerInput.attributesManager.setSessionAttributes(attr);
     return handlerInput.responseBuilder
       .speak(speechText)
-      .withSimpleCard('Welcome!', DisplayText)
       .withShouldEndSession(false)
       .getResponse();
   },
@@ -434,6 +455,137 @@ function httpGet(info) {
       console.log(body);
   });
 }
+
+
+function httpGetUpdate(info) {
+  console.log("come this area1");
+  request.post({ url: `https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata/${info.name}`, form: info }, function (err, httpResponse, body) {
+      if (err) { return console.log(err); }
+      console.log(body);
+  });
+}
+
+/* Update user details */
+const updateUserIntentHandler = { 
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'updateUserIntent';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let ageValue = isSlotValid(request, 'age');
+    let genderValue = isSlotValid(request, 'gender');
+    let nameValue = isSlotValid(request,'name');
+    let weightValue = isSlotValid(request,'weight');
+    let heightValue = isSlotValid(request,'height');
+    let speechText = '';
+    let attr;
+
+    /* Firstly get name if not supplied already */
+    if(!nameValue) {
+      speechText = getRandom(session.lastNamePrompt, [
+        'Awesome, Whats your first name?',
+        'Cool, first name please.',
+        'Can I get your first name?'
+      ]);
+      attr = {lastNamePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('name', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    /* Get Gender of user */
+    if(!genderValue) {
+      speechText = getRandom(session.lastGenderPrompt, [
+        'what is the gender of the person',
+        'are we talking about a male or a female',
+        'are you asking about a male or a female',
+        'tell me if the person is a female or a male',
+        'what gender is the person',
+        'are they male or female'
+      ]);
+      attr = {lastGenderPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('gender', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    genderValue = getGender(genderValue);
+
+    /* Get Age of user */
+    if(!ageValue) {
+      speechText = getRandom(session.lastAgePrompt, [
+        'Okay, How old are you?'
+      ]);
+      attr = {lastAgePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('age', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+  }
+    
+    if(!weightValue) {
+      speechText = getRandom(session.lastWeightPrompt, [
+        'What is your weight in kilograms'
+      ]);
+      attr = {lastWeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('weight', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    
+    if(!heightValue) {
+      speechText = getRandom(session.lastHeightPrompt, [
+        'How tall are you in centimeters?'
+      ]);
+      attr = {lastHeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('height', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+
+    let name = currentIntent.slots['name'].value;
+    let gender = genderValue;
+    let age = currentIntent.slots['age'].value;;
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+
+    var info = {
+      age: age,
+      name: name,
+      weight: weight,
+      gender: gender,
+      height: height
+    };
+    httpGetUpdate(info);
+
+    /* we have all values, get daily intake for database build response and speak */
+    try {
+      speechText = 'Successfully updated your details!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
+
 /* Intent to add a user */
 const AddUserIntentHandler = {
   canHandle(handlerInput) {
@@ -1583,6 +1735,7 @@ exports.handler = skillBuilder
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
     BMRIntentHandler,
+    updateUserIntentHandler,
     /*standard handlers */
     LaunchRequestHandler,  
     CancelIntentHandler,

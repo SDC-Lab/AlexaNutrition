@@ -419,6 +419,42 @@
           ]
         },
         {
+          "name": "updateUserIntent",
+          "slots": [
+            {
+              "name": "age",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "weight",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "height",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "gender",
+              "type": "gender"
+            },
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
+            }
+          ],
+          "samples": [
+            "Update my details",
+            "update {name} details",
+            "update my details",
+            "Update details",
+            "Account update",
+            "Update user details for {name}",
+            "Details update",
+            "Account detail update",
+            "I Would like to update my details"
+          ]
+        },
+        {
           "name": "BMRcalcIntent",
           "slots": [
             {
