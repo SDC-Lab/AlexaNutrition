@@ -435,7 +435,7 @@ const LaunchRequestHandler = {
         type: 'BodyTemplate2',
         token: 'string',
         backButton: 'HIDDEN',
-        title: 'Nutrition Help',
+        title: 'Nutrition Advice',
         image: myImage,
         textContent: primaryText
       });
