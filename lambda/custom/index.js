@@ -420,7 +420,7 @@ const LaunchRequestHandler = {
       lastNutrientPrompt: ''
     };
 
-    imgAddress = "https://hercanberra.com.au/wp-content/uploads/2018/03/cheap-healthy-food-feature-565x376.jpg";
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/NutritionAdvice.png";
 
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
@@ -430,14 +430,13 @@ const LaunchRequestHandler = {
       const primaryText = new Alexa.RichTextContentHelper()
         .withTertiaryText(DisplayText)
         .getTextContent();
-        
+      
       handlerInput.responseBuilder.addRenderTemplateDirective({
         type: 'BodyTemplate2',
         token: 'string',
         backButton: 'HIDDEN',
         title: 'Nutrition Advice',
-        image: myImage,
-        textContent: primaryText
+        backgroundImage: myImage
       });
   }
 
