@@ -129,26 +129,6 @@ async function searchFoodItem(value) {
   });
 }
 
-/* sends a request to the API handler for a kiosk scan activation, returned as 
-*  promise so other functions can wait on it  
-*  @param username - username to be used for API call to kiosk server
-*  @param pin - 4 digit pin for kiosk API call
-*  @return - the results body of the kiosk scan API call
-**/
-async function requestKioskScan(username, pin) {
-  let resultsBody;
-  try {
-    resultsBody = await apiRequest.handler.kioskScan(username, pin);
-    
-  } catch(err) {
-    console.log("ERROR WITH KIOSK SCAN REQUEST");
-    console.log(err);
-  }
-  return new Promise(function (resolve, reject) {
-    resolve(resultsBody);
-  });
-}
-
 /* adds values to session state without deleting others, basically a neat 
 *  wrapper for the alexa setSessionAttributes method 
 *  @param values - object with our session values to be updated
@@ -398,16 +378,10 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     let session = handlerInput.attributesManager.getSessionAttributes();
     let speechText = getRandom(session.lastWelcomeResponse, [
-      'You can ask me for nutrition facts if you like',
-      'I can scan your food item if you like',
-      'You can start off by placing your food in the kiosk scanner',
-      'What food would you like to know about?',
-      'Interested to know what is in your food? Let me scan it and have a look for you',
-      'I can find information on food if you want',
-      'Tell me the food item that you would like to know more about',
-      'What food item do you want me to find for you?',
-      'Lets start by scanning your food or asking me for a nutrition information to find for you'
+      'Hi, I can calculate your body mass, register meals or search for nutrtion information.'
     ]);
+
+    var DisplayText = "Getting Started: Say 'Check BMI', 'Check BMR', 'Register User', 'Tell me facts about Spaghetti'";
     /* formally declare and initialize our session variables */
     const attr = {
       lastFoodResult: null,
@@ -425,10 +399,30 @@ const LaunchRequestHandler = {
       lastStopResponse: '',
       lastNutrientPrompt: ''
     };
+
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/NutritionAdvice.png";
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withTertiaryText(DisplayText)
+        .getTextContent();
+      
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        title: 'Nutrition Advice',
+        backgroundImage: myImage
+      });
+  }
+
     handlerInput.attributesManager.setSessionAttributes(attr);
     return handlerInput.responseBuilder
       .speak(speechText)
-      .withSimpleCard('System entrypoint', speechText)
       .withShouldEndSession(false)
       .getResponse();
   },
@@ -440,11 +434,21 @@ function httpGet(info) {
       console.log(body);
   });
 }
-/* Intent to add a user */
-const AddUserIntentHandler = {
+
+
+function httpGetUpdate(info) {
+  console.log("come this area1");
+  request.post({ url: `https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata/${info.name}`, form: info }, function (err, httpResponse, body) {
+      if (err) { return console.log(err); }
+      console.log(body);
+  });
+}
+
+/* Update user details */
+const updateUserIntentHandler = { 
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'AddUserIntent';
+      && handlerInput.requestEnvelope.request.intent.name === 'updateUserIntent';
   },
   async handle(handlerInput) {
     const session = handlerInput.attributesManager.getSessionAttributes();
@@ -458,7 +462,7 @@ const AddUserIntentHandler = {
     let speechText = '';
     let attr;
 
-    /* Firstly get name */
+    /* Firstly get name if not supplied already */
     if(!nameValue) {
       speechText = getRandom(session.lastNamePrompt, [
         'Awesome, Whats your first name?',
@@ -546,6 +550,134 @@ const AddUserIntentHandler = {
       gender: gender,
       height: height
     };
+    httpGetUpdate(info);
+
+    /* we have all values, get daily intake for database build response and speak */
+    try {
+      speechText = 'Successfully updated your details!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
+
+/* Intent to add a user */
+const AddUserIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'AddUserIntent';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let ageValue = isSlotValid(request, 'age');
+    let genderValue = isSlotValid(request, 'gender');
+    let nameValue = isSlotValid(request,'name');
+    let weightValue = isSlotValid(request,'weight');
+    let heightValue = isSlotValid(request,'height');
+    let speechText = '';
+    let attr;
+
+    let name = currentIntent.slots['name'].value;
+    let gender = genderValue;
+    let age = currentIntent.slots['age'].value;;
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+
+
+
+    /* Firstly get name */
+    if(!nameValue) {
+      speechText = getRandom(session.lastNamePrompt, [
+        'Awesome, Whats your first name?',
+        'Cool, first name please.',
+        'Can I get your first name?'
+      ]);
+      attr = {lastNamePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('name', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+
+    /* Get Gender of user */
+    if(!genderValue) {
+      speechText = getRandom(session.lastGenderPrompt, [
+        'what is the gender of the person',
+        'are we talking about a male or a female',
+        'are you asking about a male or a female',
+        'tell me if the person is a female or a male',
+        'what gender is the person',
+        'are they male or female'
+      ]);
+      attr = {lastGenderPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withSimpleCard('Name: ' + name)
+        .addElicitSlotDirective('gender', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    genderValue = getGender(genderValue);
+
+    /* Get Age of user */
+    if(!ageValue) {
+      speechText = getRandom(session.lastAgePrompt, [
+        'Okay, How old are you?'
+      ]);
+      attr = {lastAgePrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\n\u200b\n Gender: ' + gender)
+        .addElicitSlotDirective('age', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+  }
+    
+    if(!weightValue) {
+      speechText = getRandom(session.lastWeightPrompt, [
+        'What is your weight in kilograms'
+      ]);
+      attr = {lastWeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\nGender: ' + gender + '\nAge : ' + age)
+        .addElicitSlotDirective('weight', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+    
+    if(!heightValue) {
+      speechText = getRandom(session.lastHeightPrompt, [
+        'How tall are you in centimeters?'
+      ]);
+      attr = {lastHeightPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\nGender: ' + gender+ '\nAge : ' + age + '\nWeight : ' + weight)
+        .addElicitSlotDirective('height', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    }
+
+    var info = {
+      age: age,
+      name: name,
+      weight: weight,
+      gender: gender,
+      height: height
+    };
     httpGet(info);
 
     /* we have all values, get daily intake for database build response and speak */
@@ -556,11 +688,11 @@ const AddUserIntentHandler = {
     }
     return handlerInput.responseBuilder
       .speak(speechText)
+      .withSimpleCard('Name: ' + nameValue + '\nGender: ' + genderValue + '\nAge : ' + ageValue + '\nWeight : ' + weightValue + '\nHeight : ' + heightValue)
       .withShouldEndSession(false)
       .getResponse();
   },
 };
-
 
 /* BMI Calculator */
 const BMIIntentHandler = {
@@ -577,7 +709,7 @@ const BMIIntentHandler = {
     let heightValue = isSlotValid(request,'height');
     let speechText = '';
     let attr;
-
+    
     /* Get Age of user */
     if(!weightValue) {
       speechText = getRandom(session.lastWeightPrompt, [
@@ -607,6 +739,8 @@ const BMIIntentHandler = {
 
     let weight = currentIntent.slots['weight'].value;
     let height = currentIntent.slots['height'].value;
+    
+   
 
 try {
     const newHeight = height / 100;
@@ -626,13 +760,35 @@ try {
     {
         weightCategoryOutput = '. You are overweight.';
     }
-    else
+    else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
+    }
+    else
+    {
+        weightCategoryOutput = '. You are extremely obese.';
     }
     speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput;
     } catch(err) {
       console.log(err);
+    }
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(bmi)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate7',
+        token: 'string',
+        backButton: 'HIDDEN',
+        backgroundImage:myImage,
+        textContent: primaryText
+      });
     }
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -640,6 +796,8 @@ try {
       .getResponse();
   },
 }
+
+
 /* BMR Calculator */
 const BMRIntentHandler = {
   canHandle(handlerInput) {
@@ -687,7 +845,7 @@ const BMRIntentHandler = {
     /* Get gender of user */
     if(!genderValue) {
       speechText = getRandom(session.lastGenderPrompt, [
-        'Okay, What is your sex?'
+        'Okay, What is your gender?'
       ]);
       attr = {lastGenderPrompt: speechText};
       addSessionValues(attr, handlerInput);
@@ -725,6 +883,9 @@ const BMRIntentHandler = {
     let age = currentIntent.slots['userage'].value;
     let gender = genderValue;
 
+    imgAddress = "https://images-na.ssl-images-amazon.com/images/I/51UoIzk274L.png";
+
+    
 try {
     var bmr;
     var calc = (10 * weight) + (6.25 * height) - (5 * age);
@@ -741,6 +902,26 @@ try {
     } catch(err) {
       console.log(err);
     }
+
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(speechText)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        image: myImage,
+        textContent: primaryText
+      });
+  }
+
     return handlerInput.responseBuilder
       .speak(speechText)
       .withShouldEndSession(false)
@@ -899,7 +1080,7 @@ const FoodSearchIntentHandler = {
     };
 
     //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
-    var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
+  var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
     imgAddress += proteinatt;
     imgAddress += ",";
     imgAddress += fatatt;
@@ -908,30 +1089,110 @@ const FoodSearchIntentHandler = {
     imgAddress += ","
     imgAddress += carbatt;
     imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
+    
 
-  var nextline = " Grams \u{2022}";
+/*
+var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?protein=";
+    imgAddress += proteinatt;
+    imgAddress += "&fat=";
+    imgAddress += fatatt;
+    imgAddress += "&sugar="
+    imgAddress += sugaratt;
+    imgAddress += "&carbs="
+    imgAddress += carbatt;
+    */
+  //var nextline = " Grams";
 
-  var Displaytext = "Protein: " + proteinatt + nextline + "Fat: " + fatatt + nextline + "Sugar: " + sugaratt + nextline + " Carbs: " + carbatt + nextline;
-
-    if (supportsDisplay(handlerInput) ) {
-      const myImage = new Alexa.ImageHelper()
-        .addImageInstance(imgAddress)
-        .getImage();
-     
-      const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(Displaytext)
-        .getTextContent();
-        
-      handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate2',
-        token: 'string',
-        backButton: 'HIDDEN',
-        image: myImage,
-        title: `${results.name}`,
-        textContent: primaryText,
-
-      });
-  }
+   var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
+   //var testing = "test";
+ 
+     if (supportsDisplay(handlerInput) ) {
+       const myImage = new Alexa.ImageHelper()
+         .addImageInstance(imgAddress)
+         .getImage();
+      
+       /*const primaryText = new Alexa.RichTextContentHelper()
+         .withTertiaryText(Displaytext)
+         .getTextContent();*/
+         
+       handlerInput.responseBuilder.addRenderTemplateDirective({
+         type: 'ListTemplate1',
+         token: 'string',
+         backButton: 'HIDDEN',
+         image: myImage,
+         title: `${results.name}`,
+         listItems:[
+           {
+             token: 'item_1',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Protein</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: proteinatt + ' Grams'
+             }
+           }
+           },
+           {
+             token: 'item_2',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Fat</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: fatatt + ' Grams'
+               }
+             }
+           },
+           {
+             token: 'item_3',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Sugar</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text:  sugaratt + ' Grams'
+               }
+             }
+           },
+           {
+             token: 'item_4',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Carbs</font>' 
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: carbatt + ' Grams'
+               }
+             }
+           }
+         ]
+       });
+   }
 
     addSessionValues(attr, handlerInput);
     try {
@@ -993,108 +1254,6 @@ const MoreInformationIntentHandler = {
       .withSimpleCard('More information intent', speechText)
       .withShouldEndSession(false)
       .getResponse();
-  },
-};
-
-/* intent that triggers a API call to the kiosk server to enable the food scanner 
-*  requires validation for pin and username.
-**/
-const KioskScanIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'KioskScan'
-      && handlerInput.requestEnvelope.request.dialogState !== 'COMPLETED';
-  },
-  async handle(handlerInput) {
-    let currentIntent = handlerInput.requestEnvelope.request.intent;
-    let results, pin, speechText;
-    let pinConfirmed = currentIntent.slots['pin'].confirmationStatus;
-    let unameConfirm = currentIntent.slots['username'].confirmationStatus;
-
-    /* if our pin is correct but our username is confirmed as incorrect it is a system error */
-    if(unameConfirm === 'DENIED' && pinConfirmed === 'CONFIRMED') {
-      speechText = 'Your pin is not linked to your user name correctly, please create a new pin \
-                    via the mobile app';
-      return handlerInput.responseBuilder
-        .speak(speechText)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if we have no pin and no username confirmation yet */
-    } else if(!currentIntent.slots["pin"].value || pinConfirmed === 'DENIED') {
-      console.log('PIN BEING ASKED FOR');
-      currentIntent.slots['username'].confirmationStatus = 'NONE';
-      if(currentIntent.slots['username'].value) {
-        currentIntent.slots['username'].value = null;
-      }
-      currentIntent.slots['pin'].confirmationStatus = 'NONE';
-      console.log(currentIntent);
-      return handlerInput.responseBuilder
-        .speak('what is your pin number')
-        .addElicitSlotDirective('pin', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if we have a pin and and no username confirmation */
-    } else if(currentIntent.slots["pin"].value && unameConfirm === 'NONE') {
-      pin = currentIntent.slots["pin"].value;
-      try {
-        results = await apiRequest.handler.checkUserPin(pin)
-      } catch(err) {
-        console.log('ERROR REQUESTING PIN CHECK');
-        console.log(err);
-      }
-      results = JSON.parse(results);
-      currentIntent.slots['username'].value = results.uname;
-
-      /* if no username is returned from pin check */
-      if(parseInt(results.uname) === 0) {
-        currentIntent.slots['username'].value = null;
-        currentIntent.slots['username'].confirmationStatus = 'NONE';
-        currentIntent.slots['pin'].value = null;
-        currentIntent.slots['pin'].confirmationStatus = 'NONE';
-        return handlerInput.responseBuilder
-          .speak('no username found, what is your pin number again?')
-          .addElicitSlotDirective('pin', currentIntent)
-          .withShouldEndSession(false)
-          .getResponse();
-      }
-      /* else we have a username and we confirm it with user */
-      return handlerInput.responseBuilder
-        .speak('is your username ' + results.uname + '?')
-        .addConfirmSlotDirective('username', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if username is incorrect confirm whether pin number is correct */
-    } else if(pinConfirmed === 'NONE' && unameConfirm === 'DENIED') {
-      console.log('USERNAME BEING RESET AFTER DENIED');
-      pin = currentIntent.slots["pin"].value.split('').join(' ');
-      
-      return handlerInput.responseBuilder
-        .speak('Is the pin number ' + pin + ' correct?')
-        .addConfirmSlotDirective('pin', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if our username is confirmed we can call the kiosk scan API method */
-    } else if(unameConfirm === 'CONFIRMED') {
-      try {
-        results = await requestKioskScan('evrenb21', pin);
-      } catch(err) {
-        console.log('kiosk scan error');
-        console.log(err);
-        speechText = 'the kiosk scanner is currently unavailable';
-        return handlerInput.responseBuilder
-          .speak(speechText)
-          .getResponse();
-      }
-      speechText = 'Food succesfully scanned, thank you';
-      return handlerInput.responseBuilder
-        .speak(speechText)
-        .withShouldEndSession(false)
-        .getResponse();
-    }
   },
 };
 
@@ -1321,12 +1480,12 @@ const HelpIntentHandler = {
             '<break time="1s"/>You could also search for nutrition information, like “what is Protein” for '+
             'example. If you have any more questions not answered here, please consult the mobile app. </speak>';
           break;
-        case "kiosk":
+        case "BMR":
           speechText = '' +
-            '<speak> If you are using the kiosk to scan your food, just simply tell us, “Scan the food”, I ' +
-            'will ask you for you Username and Pin <break time="5ms"/> and let you know when the scan is ' +
-            'done. The scan results can be accessed on the mobile app. If you don’t have an account with ' + 
-            'us, or have forgotten your pin, please use the mobile app on your phone to register or get a new pin</speak>';
+            '<speak> BMR stands for Basal Metabolic Rate. It is also knwon as Recommended Daily intake. It is the ' + 
+            'total number of calories that your body needs to perform basic, life-sustaining functions. The BMR ' + 
+            'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
+            'height. This will ensure you’re getting an adequate amount of energy from your overall diet<speak>';
           break;
         case "application":
           speechText = '' +
@@ -1453,7 +1612,6 @@ exports.handler = skillBuilder
   .addRequestHandlers(
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
-    KioskScanIntentHandler,
     RegisterFoodIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
@@ -1463,6 +1621,7 @@ exports.handler = skillBuilder
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
     BMRIntentHandler,
+    updateUserIntentHandler,
     /*standard handlers */
     LaunchRequestHandler,  
     CancelIntentHandler,
