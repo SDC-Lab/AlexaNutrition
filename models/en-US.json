@@ -242,56 +242,6 @@
           "samples": []
         },
         {
-          "name": "KioskScan",
-          "slots": [
-            {
-              "name": "pin",
-              "type": "AMAZON.FOUR_DIGIT_NUMBER"
-            },
-            {
-              "name": "username",
-              "type": "AMAZON.US_FIRST_NAME"
-            }
-          ],
-          "samples": [
-            "start the scanner",
-            "Go ahead with the scanning process",
-            "Go ahead with scan",
-            "Lets start scanning",
-            "Initiate scan please",
-            "Scan initiation",
-            "Initiate scan",
-            "Activate the scanning process please",
-            "Activate the scan process please",
-            "Activate the scan",
-            "Activate the scan process",
-            "Activate the scanning process",
-            "Proceed scanning",
-            "Start scan",
-            "Start scanning",
-            "Scan activation",
-            "Activate with the scan",
-            "Activate scan procedure please",
-            "Activate scan procedure ",
-            "Activate kiosk scan",
-            "Activate kiosk scanner",
-            "Activate scanner",
-            "Activate scan",
-            "Proceed with scan",
-            "Can you start scan please",
-            "Can you start scan",
-            "Can you start scan now",
-            "Can you scan food please",
-            "Can you scan food",
-            "Can you scan now",
-            "Can you scan",
-            "Scan food please",
-            "scan the food please",
-            "scan",
-            "scan food"
-          ]
-        },
-        {
           "name": "DailyNutrientIntake",
           "slots": [
             {
@@ -780,20 +730,6 @@
             },
             {
               "name": {
-                "value": "kiosk",
-                "synonyms": [
-                  "food kiosk",
-                  "food scanner",
-                  "scanner",
-                  "scan my food",
-                  "scan food",
-                  "scanning",
-                  "scan"
-                ]
-              }
-            },
-            {
-              "name": {
                 "value": "application",
                 "synonyms": [
                   "mobile application",
@@ -842,24 +778,6 @@
             {
               "name": "attribute",
               "type": "food_attribute",
-              "elicitationRequired": false,
-              "confirmationRequired": false
-            }
-          ]
-        },
-        {
-          "name": "KioskScan",
-          "confirmationRequired": false,
-          "slots": [
-            {
-              "name": "pin",
-              "type": "AMAZON.FOUR_DIGIT_NUMBER",
-              "elicitationRequired": false,
-              "confirmationRequired": false
-            },
-            {
-              "name": "username",
-              "type": "AMAZON.US_FIRST_NAME",
               "elicitationRequired": false,
               "confirmationRequired": false
             }
@@ -1051,7 +969,7 @@
         "variations": [
           {
             "type": "PlainText",
-            "value": "I can help you with either the Kiosk, the Food Search Function or if you need general help, just ask for application. You can also ask me for help with nutrition or your diet. So, how can I help?"
+            "value": "I can help with either Food searching, BMI, BMR, registration or general help. What can I do for you today?"
           }
         ]
       }

@@ -129,26 +129,6 @@ async function searchFoodItem(value) {
   });
 }
 
-/* sends a request to the API handler for a kiosk scan activation, returned as 
-*  promise so other functions can wait on it  
-*  @param username - username to be used for API call to kiosk server
-*  @param pin - 4 digit pin for kiosk API call
-*  @return - the results body of the kiosk scan API call
-**/
-async function requestKioskScan(username, pin) {
-  let resultsBody;
-  try {
-    resultsBody = await apiRequest.handler.kioskScan(username, pin);
-    
-  } catch(err) {
-    console.log("ERROR WITH KIOSK SCAN REQUEST");
-    console.log(err);
-  }
-  return new Promise(function (resolve, reject) {
-    resolve(resultsBody);
-  });
-}
-
 /* adds values to session state without deleting others, basically a neat 
 *  wrapper for the alexa setSessionAttributes method 
 *  @param values - object with our session values to be updated
@@ -752,7 +732,7 @@ const BMIIntentHandler = {
     let weight = currentIntent.slots['weight'].value;
     let height = currentIntent.slots['height'].value;
     
-    imgAddress = "https://imageresizer.static9.net.au/G37JpddAed9elWExEVkGsB46900=/600x338/smart/http%3A%2F%2Fprod.static9.net.au%2F_%2Fmedia%2FNetwork%2FImages%2F2018%2F04%2F04%2F13%2F08%2F180404_coach_bmi.jpg";
+   
 
 try {
     const newHeight = height / 100;
@@ -767,6 +747,7 @@ try {
     else if (bmi >= 18.5 && bmi <= 24.9)
     {
         weightCategoryOutput = '. You have a healthy weight.';
+        imgAddress = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Flag_of_Libya_%281977%E2%80%932011%29.svg/300px-Flag_of_Libya_%281977%E2%80%932011%29.svg.png';
     }
     else if (bmi > 24.9 &&  bmi <= 29.9)
     {
@@ -775,6 +756,7 @@ try {
     else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
+        imgAddress = 'https://www.abc.net.au/radionational/image/6289622-4x3-340x255.png';
     }
     else
     {
@@ -798,7 +780,7 @@ try {
         type: 'BodyTemplate7',
         token: 'string',
         backButton: 'HIDDEN',
-        image: myImage,
+        backgroundImage:myImage,
         textContent: primaryText
       });
     }
@@ -1090,7 +1072,7 @@ const FoodSearchIntentHandler = {
     };
 
     //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
-    var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
+  var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
     imgAddress += proteinatt;
     imgAddress += ",";
     imgAddress += fatatt;
@@ -1099,7 +1081,7 @@ const FoodSearchIntentHandler = {
     imgAddress += ","
     imgAddress += carbatt;
     imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
-
+    
 
 /*
 var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?protein=";
@@ -1264,108 +1246,6 @@ const MoreInformationIntentHandler = {
       .withSimpleCard('More information intent', speechText)
       .withShouldEndSession(false)
       .getResponse();
-  },
-};
-
-/* intent that triggers a API call to the kiosk server to enable the food scanner 
-*  requires validation for pin and username.
-**/
-const KioskScanIntentHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-      && handlerInput.requestEnvelope.request.intent.name === 'KioskScan'
-      && handlerInput.requestEnvelope.request.dialogState !== 'COMPLETED';
-  },
-  async handle(handlerInput) {
-    let currentIntent = handlerInput.requestEnvelope.request.intent;
-    let results, pin, speechText;
-    let pinConfirmed = currentIntent.slots['pin'].confirmationStatus;
-    let unameConfirm = currentIntent.slots['username'].confirmationStatus;
-
-    /* if our pin is correct but our username is confirmed as incorrect it is a system error */
-    if(unameConfirm === 'DENIED' && pinConfirmed === 'CONFIRMED') {
-      speechText = 'Your pin is not linked to your user name correctly, please create a new pin \
-                    via the mobile app';
-      return handlerInput.responseBuilder
-        .speak(speechText)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if we have no pin and no username confirmation yet */
-    } else if(!currentIntent.slots["pin"].value || pinConfirmed === 'DENIED') {
-      console.log('PIN BEING ASKED FOR');
-      currentIntent.slots['username'].confirmationStatus = 'NONE';
-      if(currentIntent.slots['username'].value) {
-        currentIntent.slots['username'].value = null;
-      }
-      currentIntent.slots['pin'].confirmationStatus = 'NONE';
-      console.log(currentIntent);
-      return handlerInput.responseBuilder
-        .speak('what is your pin number')
-        .addElicitSlotDirective('pin', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if we have a pin and and no username confirmation */
-    } else if(currentIntent.slots["pin"].value && unameConfirm === 'NONE') {
-      pin = currentIntent.slots["pin"].value;
-      try {
-        results = await apiRequest.handler.checkUserPin(pin)
-      } catch(err) {
-        console.log('ERROR REQUESTING PIN CHECK');
-        console.log(err);
-      }
-      results = JSON.parse(results);
-      currentIntent.slots['username'].value = results.uname;
-
-      /* if no username is returned from pin check */
-      if(parseInt(results.uname) === 0) {
-        currentIntent.slots['username'].value = null;
-        currentIntent.slots['username'].confirmationStatus = 'NONE';
-        currentIntent.slots['pin'].value = null;
-        currentIntent.slots['pin'].confirmationStatus = 'NONE';
-        return handlerInput.responseBuilder
-          .speak('no username found, what is your pin number again?')
-          .addElicitSlotDirective('pin', currentIntent)
-          .withShouldEndSession(false)
-          .getResponse();
-      }
-      /* else we have a username and we confirm it with user */
-      return handlerInput.responseBuilder
-        .speak('is your username ' + results.uname + '?')
-        .addConfirmSlotDirective('username', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if username is incorrect confirm whether pin number is correct */
-    } else if(pinConfirmed === 'NONE' && unameConfirm === 'DENIED') {
-      console.log('USERNAME BEING RESET AFTER DENIED');
-      pin = currentIntent.slots["pin"].value.split('').join(' ');
-      
-      return handlerInput.responseBuilder
-        .speak('Is the pin number ' + pin + ' correct?')
-        .addConfirmSlotDirective('pin', currentIntent)
-        .withShouldEndSession(false)
-        .getResponse();
-
-    /* if our username is confirmed we can call the kiosk scan API method */
-    } else if(unameConfirm === 'CONFIRMED') {
-      try {
-        results = await requestKioskScan('evrenb21', pin);
-      } catch(err) {
-        console.log('kiosk scan error');
-        console.log(err);
-        speechText = 'the kiosk scanner is currently unavailable';
-        return handlerInput.responseBuilder
-          .speak(speechText)
-          .getResponse();
-      }
-      speechText = 'Food succesfully scanned, thank you';
-      return handlerInput.responseBuilder
-        .speak(speechText)
-        .withShouldEndSession(false)
-        .getResponse();
-    }
   },
 };
 
@@ -1592,12 +1472,12 @@ const HelpIntentHandler = {
             '<break time="1s"/>You could also search for nutrition information, like “what is Protein” for '+
             'example. If you have any more questions not answered here, please consult the mobile app. </speak>';
           break;
-        case "kiosk":
+        case "BMR":
           speechText = '' +
-            '<speak> If you are using the kiosk to scan your food, just simply tell us, “Scan the food”, I ' +
-            'will ask you for you Username and Pin <break time="5ms"/> and let you know when the scan is ' +
-            'done. The scan results can be accessed on the mobile app. If you don’t have an account with ' + 
-            'us, or have forgotten your pin, please use the mobile app on your phone to register or get a new pin</speak>';
+            '<speak> BMR stands for Basal Metabolic Rate. It is also knwon as Recommended Daily intake. It is the ' + 
+            'total number of calories that your body needs to perform basic, life-sustaining functions. The BMR ' + 
+            'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
+            'height. This will ensure you’re getting an adequate amount of energy from your overall diet<speak>';
           break;
         case "application":
           speechText = '' +
@@ -1724,7 +1604,6 @@ exports.handler = skillBuilder
   .addRequestHandlers(
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
-    KioskScanIntentHandler,
     RegisterFoodIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
