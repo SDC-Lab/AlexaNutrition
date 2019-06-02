@@ -583,6 +583,14 @@ const AddUserIntentHandler = {
     let speechText = '';
     let attr;
 
+    let name = currentIntent.slots['name'].value;
+    let gender = genderValue;
+    let age = currentIntent.slots['age'].value;;
+    let weight = currentIntent.slots['weight'].value;
+    let height = currentIntent.slots['height'].value;
+
+
+
     /* Firstly get name */
     if(!nameValue) {
       speechText = getRandom(session.lastNamePrompt, [
@@ -598,6 +606,7 @@ const AddUserIntentHandler = {
         .withShouldEndSession(false)
         .getResponse();
     }
+
     /* Get Gender of user */
     if(!genderValue) {
       speechText = getRandom(session.lastGenderPrompt, [
@@ -612,6 +621,7 @@ const AddUserIntentHandler = {
       addSessionValues(attr, handlerInput);
       return handlerInput.responseBuilder
         .speak(speechText)
+        .withSimpleCard('Name: ' + name)
         .addElicitSlotDirective('gender', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
@@ -627,6 +637,7 @@ const AddUserIntentHandler = {
       addSessionValues(attr, handlerInput);
       return handlerInput.responseBuilder
         .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\n\u200b\n Gender: ' + gender)
         .addElicitSlotDirective('age', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
@@ -640,6 +651,7 @@ const AddUserIntentHandler = {
       addSessionValues(attr, handlerInput);
       return handlerInput.responseBuilder
         .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\nGender: ' + gender + '\nAge : ' + age)
         .addElicitSlotDirective('weight', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
@@ -653,16 +665,11 @@ const AddUserIntentHandler = {
       addSessionValues(attr, handlerInput);
       return handlerInput.responseBuilder
         .speak(speechText)
+        .withSimpleCard('Name: ' + name + '\nGender: ' + gender+ '\nAge : ' + age + '\nWeight : ' + weight)
         .addElicitSlotDirective('height', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
     }
-
-    let name = currentIntent.slots['name'].value;
-    let gender = genderValue;
-    let age = currentIntent.slots['age'].value;;
-    let weight = currentIntent.slots['weight'].value;
-    let height = currentIntent.slots['height'].value;
 
     var info = {
       age: age,
@@ -681,6 +688,7 @@ const AddUserIntentHandler = {
     }
     return handlerInput.responseBuilder
       .speak(speechText)
+      .withSimpleCard('Name: ' + nameValue + '\nGender: ' + genderValue + '\nAge : ' + ageValue + '\nWeight : ' + weightValue + '\nHeight : ' + heightValue)
       .withShouldEndSession(false)
       .getResponse();
   },
@@ -747,7 +755,6 @@ try {
     else if (bmi >= 18.5 && bmi <= 24.9)
     {
         weightCategoryOutput = '. You have a healthy weight.';
-        imgAddress = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Flag_of_Libya_%281977%E2%80%932011%29.svg/300px-Flag_of_Libya_%281977%E2%80%932011%29.svg.png';
     }
     else if (bmi > 24.9 &&  bmi <= 29.9)
     {
@@ -756,7 +763,6 @@ try {
     else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
-        imgAddress = 'https://www.abc.net.au/radionational/image/6289622-4x3-340x255.png';
     }
     else
     {
@@ -790,6 +796,8 @@ try {
       .getResponse();
   },
 }
+
+
 /* BMR Calculator */
 const BMRIntentHandler = {
   canHandle(handlerInput) {
@@ -1095,96 +1103,96 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
     */
   //var nextline = " Grams";
 
-  var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
-  //var testing = "test";
-
-    if (supportsDisplay(handlerInput) ) {
-      const myImage = new Alexa.ImageHelper()
-        .addImageInstance(imgAddress)
-        .getImage();
-     
-      /*const primaryText = new Alexa.RichTextContentHelper()
-        .withTertiaryText(Displaytext)
-        .getTextContent();*/
-        
-      handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'ListTemplate1',
-        token: 'string',
-        backButton: 'HIDDEN',
-        image: myImage,
-        title: `${results.name}`,
-        listItems:[
-          {
-            token: 'item_1',
-            textContent:{
-              primaryText:{
-                type:'RichText',
-                text:'<font size="5">Protein</font>'
-              },
-              secondaryText: {
-                type: "PlainText",
-                text: "Serving Size: 100grams"
-              },
-              tertiaryText: {
-                type: "PlainText",
-                text: proteinatt + ' Grams'
-            }
-          }
-          },
-          {
-            token: 'item_2',
-            textContent:{
-              primaryText:{
-                type:'RichText',
-                text:'<font size="5">Fat</font>'
-              },
-              secondaryText: {
-                type: "PlainText",
-                text: "Serving Size: 100grams"
-              },
-              tertiaryText: {
-                type: "PlainText",
-                text: fatatt + ' Grams'
-              }
-            }
-          },
-          {
-            token: 'item_3',
-            textContent:{
-              primaryText:{
-                type:'RichText',
-                text:'<font size="5">Sugar</font>'
-              },
-              secondaryText: {
-                type: "PlainText",
-                text: "Serving Size: 100grams"
-              },
-              tertiaryText: {
-                type: "PlainText",
-                text:  sugaratt + ' Grams'
-              }
-            }
-          },
-          {
-            token: 'item_4',
-            textContent:{
-              primaryText:{
-                type:'RichText',
-                text:'<font size="5">Carbs</font>' 
-              },
-              secondaryText: {
-                type: "PlainText",
-                text: "Serving Size: 100grams"
-              },
-              tertiaryText: {
-                type: "PlainText",
-                text: carbatt + ' Grams'
-              }
-            }
-          }
-        ]
-      });
-  }
+   var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
+   //var testing = "test";
+ 
+     if (supportsDisplay(handlerInput) ) {
+       const myImage = new Alexa.ImageHelper()
+         .addImageInstance(imgAddress)
+         .getImage();
+      
+       /*const primaryText = new Alexa.RichTextContentHelper()
+         .withTertiaryText(Displaytext)
+         .getTextContent();*/
+         
+       handlerInput.responseBuilder.addRenderTemplateDirective({
+         type: 'ListTemplate1',
+         token: 'string',
+         backButton: 'HIDDEN',
+         image: myImage,
+         title: `${results.name}`,
+         listItems:[
+           {
+             token: 'item_1',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Protein</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: proteinatt + ' Grams'
+             }
+           }
+           },
+           {
+             token: 'item_2',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Fat</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: fatatt + ' Grams'
+               }
+             }
+           },
+           {
+             token: 'item_3',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Sugar</font>'
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text:  sugaratt + ' Grams'
+               }
+             }
+           },
+           {
+             token: 'item_4',
+             textContent:{
+               primaryText:{
+                 type:'RichText',
+                 text:'<font size="5">Carbs</font>' 
+               },
+               secondaryText: {
+                 type: "PlainText",
+                 text: "Serving Size: 100grams"
+               },
+               tertiaryText: {
+                 type: "PlainText",
+                 text: carbatt + ' Grams'
+               }
+             }
+           }
+         ]
+       });
+   }
 
     addSessionValues(attr, handlerInput);
     try {
