@@ -751,18 +751,22 @@ try {
     if(bmi < 18.5)
     {
         weightCategoryOutput = '. You are underweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/BMICharts/UNDERWEIGHT.png";
     }
     else if (bmi >= 18.5 && bmi <= 24.9)
     {
         weightCategoryOutput = '. You have a healthy weight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/BMICharts/HEALTHY.png";
     }
     else if (bmi > 24.9 &&  bmi <= 29.9)
     {
         weightCategoryOutput = '. You are overweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/BMICharts/OVERWEIGHT.png";
     }
     else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/BMICharts/OBESE.png";
     }
     else
     {
@@ -779,11 +783,11 @@ try {
         .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(bmi)
+        .withSecondaryText('BMI : ' + bmiRounded)
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate7',
+        type: 'BodyTemplate2',
         token: 'string',
         backButton: 'HIDDEN',
         backgroundImage:myImage,
