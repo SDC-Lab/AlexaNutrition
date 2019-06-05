@@ -400,7 +400,7 @@ const LaunchRequestHandler = {
       lastNutrientPrompt: ''
     };
 
-    imgAddress = "https://ka1901.scem.westernsydney.edu.au/NutritionAdvice.png";
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/BMIHELP.png";
 
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
@@ -589,8 +589,6 @@ const AddUserIntentHandler = {
     let weight = currentIntent.slots['weight'].value;
     let height = currentIntent.slots['height'].value;
 
-
-
     /* Firstly get name */
     if(!nameValue) {
       speechText = getRandom(session.lastNamePrompt, [
@@ -641,8 +639,7 @@ const AddUserIntentHandler = {
         .addElicitSlotDirective('age', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
-  }
-    
+    }
     if(!weightValue) {
       speechText = getRandom(session.lastWeightPrompt, [
         'What is your weight in kilograms'
@@ -656,7 +653,6 @@ const AddUserIntentHandler = {
         .withShouldEndSession(false)
         .getResponse();
     }
-    
     if(!heightValue) {
       speechText = getRandom(session.lastHeightPrompt, [
         'How tall are you in centimeters?'
@@ -740,8 +736,6 @@ const BMIIntentHandler = {
     let weight = currentIntent.slots['weight'].value;
     let height = currentIntent.slots['height'].value;
     
-   
-
 try {
     const newHeight = height / 100;
     var bmi = weight / (newHeight * newHeight);
@@ -751,51 +745,56 @@ try {
     if(bmi < 18.5)
     {
         weightCategoryOutput = '. You are underweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/UwBMI";
     }
     else if (bmi >= 18.5 && bmi <= 24.9)
     {
         weightCategoryOutput = '. You have a healthy weight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/hBMI";
     }
     else if (bmi > 24.9 &&  bmi <= 29.9)
     {
         weightCategoryOutput = '. You are overweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/ovBMI";
     }
     else if (bmi > 29.9 &&  bmi <= 34.9)
     {
         weightCategoryOutput = '. You are obese.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/oBMI";
     }
     else
     {
         weightCategoryOutput = '. You are extremely obese.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/ObBMI";
     }
-    speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput;
+    speechText = 'Your BMI is ' + bmiRounded;
     } catch(err) {
       console.log(err);
     }
-
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
         .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(bmi)
+        .withSecondaryText(speechText)
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate7',
+        type: 'BodyTemplate2',
         token: 'string',
         backButton: 'HIDDEN',
         backgroundImage:myImage,
         textContent: primaryText
       });
     }
-    return handlerInput.responseBuilder
-      .speak(speechText)
-      .withShouldEndSession(false)
-      .getResponse();
-  },
-}
+  
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withShouldEndSession(false)
+        .getResponse();
+    },
+  }
 
 
 /* BMR Calculator */
@@ -883,7 +882,7 @@ const BMRIntentHandler = {
     let age = currentIntent.slots['userage'].value;
     let gender = genderValue;
 
-    imgAddress = "https://images-na.ssl-images-amazon.com/images/I/51UoIzk274L.png";
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/BMRBMR";
 
     
 try {
@@ -1105,15 +1104,15 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
 
    var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
    //var testing = "test";
- 
+ /*
      if (supportsDisplay(handlerInput) ) {
        const myImage = new Alexa.ImageHelper()
          .addImageInstance(imgAddress)
          .getImage();
       
-       /*const primaryText = new Alexa.RichTextContentHelper()
+     const primaryText = new Alexa.RichTextContentHelper()
          .withTertiaryText(Displaytext)
-         .getTextContent();*/
+         .getTextContent();
          
        handlerInput.responseBuilder.addRenderTemplateDirective({
          type: 'ListTemplate1',
@@ -1193,6 +1192,24 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
          ]
        });
    }
+*/
+            if (supportsDisplay(handlerInput) ) {
+              const myImage = new Alexa.ImageHelper()
+                .addImageInstance(imgAddress)
+                .getImage();
+
+              const primaryText = new Alexa.RichTextContentHelper()
+                .withPrimaryText(Displaytext)
+                .getTextContent();
+                
+              handlerInput.responseBuilder.addRenderTemplateDirective({
+                type: 'BodyTemplate7',
+                token: 'string',
+                backButton: 'HIDDEN',
+                image: myImage,
+                title: primaryText
+              });
+          }
 
     addSessionValues(attr, handlerInput);
     try {
@@ -1249,6 +1266,86 @@ const MoreInformationIntentHandler = {
       }
     }
     speechText = 'You need to search for a food item first';
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withSimpleCard('More information intent', speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
+const WhatisBMIintentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'WhatisBMIintent';
+  },
+  handle(handlerInput) {
+    let speechText = '';
+    speechText = '' +
+            'BMI stands for body mass index. It is a value derived from the weight and height of an individual.' +
+            ' The BMI is an attempt to quantify the amount of tissue mass in an individual, and then categorize ' + 
+            'that person as underweight, normal weight, overweight, or obese based on that value';
+
+            imgAddress = "https://images.iphonephotographyschool.com/22702/1120b/How-To-Blur-Background-On-iPhone.jpg";
+            if (supportsDisplay(handlerInput) ) {
+              const myImage = new Alexa.ImageHelper()
+                .addImageInstance(imgAddress)
+                .getImage();
+
+              const primaryText = new Alexa.RichTextContentHelper()
+                .withSecondaryText(speechText)
+                .getTextContent();
+                
+              handlerInput.responseBuilder.addRenderTemplateDirective({
+                type: 'BodyTemplate2',
+                token: 'string',
+                backButton: 'HIDDEN',
+                backgroundImage: myImage,
+                textContent: primaryText
+              });
+          }
+
+
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withSimpleCard('More information intent', speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
+const WhatisBMRintentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'WhatisBMRintent';
+  },
+  handle(handlerInput) {
+    let speechText = '';
+    speechText = '' +
+    'BMR stands for Basal Metabolic Rate. It is also knwon as Recommended Daily intake. It is the ' + 
+    'total number of calories that your body needs to perform basic, life-sustaining functions. The BMR ' + 
+    'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
+    'height. This will ensure you’re getting an adequate amount of energy from your overall diet';
+
+    imgAddress = "https://images.iphonephotographyschool.com/22702/1120b/How-To-Blur-Background-On-iPhone.jpg";
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(speechText)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        backgroundImage: myImage,
+        textContent: primaryText
+      });
+  }
+
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('More information intent', speechText)
@@ -1480,13 +1577,6 @@ const HelpIntentHandler = {
             '<break time="1s"/>You could also search for nutrition information, like “what is Protein” for '+
             'example. If you have any more questions not answered here, please consult the mobile app. </speak>';
           break;
-        case "BMR":
-          speechText = '' +
-            '<speak> BMR stands for Basal Metabolic Rate. It is also knwon as Recommended Daily intake. It is the ' + 
-            'total number of calories that your body needs to perform basic, life-sustaining functions. The BMR ' + 
-            'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
-            'height. This will ensure you’re getting an adequate amount of energy from your overall diet<speak>';
-          break;
         case "application":
           speechText = '' +
             '<speak>I can do many things for you: You can ask it to “Search for beef” and I can return with ' +
@@ -1622,6 +1712,8 @@ exports.handler = skillBuilder
     NutrientWhereIsHandler,
     BMRIntentHandler,
     updateUserIntentHandler,
+    WhatisBMIintentHandler,
+    WhatisBMRintentHandler,
     /*standard handlers */
     LaunchRequestHandler,  
     CancelIntentHandler,
