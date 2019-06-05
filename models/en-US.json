@@ -337,6 +337,18 @@
           ]
         },
         {
+          "name": "WhatisBMIintent",
+          "samples": [
+            "what is bmi"
+          ]
+        },
+        {
+          "name": "WhatisBMRintent",
+          "samples": [
+            "what is bmr"
+          ]
+        },
+        {
           "name": "AddUserIntent",
           "slots": [
             {
