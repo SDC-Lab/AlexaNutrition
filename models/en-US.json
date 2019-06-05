@@ -315,6 +315,22 @@
           ]
         },
         {
+          "name": "LogMealIntent",
+          "slots": [
+            {
+              "name": "userID",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Food",
+              "type": "AMAZON.Food"
+            }
+          ],
+          "samples": [
+            "Register food"
+          ]
+        },
+        {
           "name": "NutrientWhatIsIntent",
           "slots": [
             {

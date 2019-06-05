@@ -444,6 +444,67 @@ function httpGetUpdate(info) {
   });
 }
 
+function httpGet2(info) {
+  request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api2/alexa/routes/api/fooddata', form: info }, function (err, httpResponse, body) {
+      if (err) { return console.log(err); }
+      console.log(body);
+  });
+}
+
+const LogMealIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'LogMealIntent'
+      && handlerInput.requestEnvelope.request !== 'COMPLETED';
+  },
+  async handle(handlerInput) {
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let UserValue = isSlotValid(request, 'userID');
+    let FoodValue = isSlotValid(request, 'Food');
+    let speechText = '';
+
+    let userID = currentIntent.slots['userID'].value;
+    let Food = currentIntent.slots['Food'].value;
+
+    if(!UserValue) {
+      speechText = 'Who is this?';
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('userID', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    } 
+
+    if(!FoodValue) {
+      speechText = 'What is the name of the food?'; 
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('Food', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+    } 
+    
+    var info = {
+      userID:userID,
+      Food:Food
+    };
+
+    httpGet2(info);
+
+    try {
+      speechText = 'Registering food!'
+    } catch(err) {
+      console.log(err);
+    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+}
+
+
 /* Update user details */
 const updateUserIntentHandler = { 
   canHandle(handlerInput) {
@@ -1078,8 +1139,12 @@ const FoodSearchIntentHandler = {
       lastFoodResult: results
     };
 
+    
+    //var other = 100 - (proteinatt+fatatt+sugaratt+carbatt);
+
+
     //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
-  var imgAddress = "https://chart.googleapis.com/chart?chco=083D77|DA4167|2E4057|F6D8AE&chs=450x300&chf=bg,s,65432100&chd=t:";
+  var imgAddress = "https://chart.googleapis.com/chart?chco=1446A0|DB3069|F5D547|5B3758&chs=480x400&chf=bg,s,65432100&chd=t:";
     imgAddress += proteinatt;
     imgAddress += ",";
     imgAddress += fatatt;
@@ -1087,6 +1152,8 @@ const FoodSearchIntentHandler = {
     imgAddress += sugaratt;
     imgAddress += ","
     imgAddress += carbatt;
+    //imgAddress += ","
+    //imgAddress += other;
     imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
     
 
@@ -1102,7 +1169,7 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
     */
   //var nextline = " Grams";
 
-   var Displaytext = "Protein: " + proteinatt + "\nFat: " + fatatt +  "Sugar: " + sugaratt + "Carbs: " + carbatt;
+   var Displaytext = "Protein: " + proteinatt + " Fat: " + fatatt +  " Sugar: " + sugaratt + " Carbs: " + carbatt;
    //var testing = "test";
  /*
      if (supportsDisplay(handlerInput) ) {
@@ -1193,29 +1260,37 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
        });
    }
 */
-            if (supportsDisplay(handlerInput) ) {
-              const myImage = new Alexa.ImageHelper()
-                .addImageInstance(imgAddress)
-                .getImage();
 
-              const primaryText = new Alexa.RichTextContentHelper()
-                .withPrimaryText(Displaytext)
-                .getTextContent();
-                
-              handlerInput.responseBuilder.addRenderTemplateDirective({
-                type: 'BodyTemplate7',
-                token: 'string',
-                backButton: 'HIDDEN',
-                image: myImage,
-                title: primaryText
-              });
-          }
+   bimageaddr = "https://www.splitshire.com/wp-content/uploads/2014/11/SplitShire-03692-1800x1200.jpg";
 
     addSessionValues(attr, handlerInput);
     try {
       saveSearchResult(results);
     } catch(err) {
       console.log(err);
+    }
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+      
+      const bimage = new Alexa.ImageHelper()
+        .addImageInstance(bimageaddr)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(Displaytext)
+        .getTextContent();
+        
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        backgroundImage:bimage,
+        image: myImage,
+        textContent: primaryText
+      });
     }
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -1707,6 +1782,7 @@ exports.handler = skillBuilder
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
     AddUserIntentHandler,
+    LogMealIntentHandler,
     BMIIntentHandler,
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
