@@ -659,6 +659,33 @@ const AddUserIntentHandler = {
       ]);
       attr = {lastNamePrompt: speechText};
       addSessionValues(attr, handlerInput);
+
+//      imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/USERREG";
+/*
+      if (supportsDisplay(handlerInput) ) {
+        const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(speechText)
+        .getTextContent();
+
+        response.addRenderTemplateDirectiv.addRenderTemplateDirective({
+          type: 'BodyTemplate2',
+          token: 'string',
+          backButton: 'HIDDEN',
+          backgroundImage:myImage,
+          textContent: primaryText
+        });
+
+        return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('name', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+      }
+*/
       return handlerInput.responseBuilder
         .speak(speechText)
         .addElicitSlotDirective('name', currentIntent)
@@ -742,7 +769,27 @@ const AddUserIntentHandler = {
       speechText = 'Adding user to database!'
     } catch(err) {
       console.log(err);
+    } 
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/USERREG";
+
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+      .addImageInstance(imgAddress)
+      .getImage();
+   
+    const primaryText = new Alexa.RichTextContentHelper()
+      .withSecondaryText(speechText)
+      .getTextContent();
+
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        backgroundImage:myImage,
+        textContent: primaryText
+      });
     }
+  
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Name: ' + nameValue + '\nGender: ' + genderValue + '\nAge : ' + ageValue + '\nWeight : ' + weightValue + '\nHeight : ' + heightValue)
@@ -750,6 +797,28 @@ const AddUserIntentHandler = {
       .getResponse();
   },
 };
+
+
+const YesNoIntentHandler = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && (handlerInput.requestEnvelope.request.intent.name === 'AMAZON.YesIntent' ||
+         handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent');
+  },
+  handle(handlerInput) {
+    let answer = 'yes';
+    if(handlerInput.requestEnvelope.request.intent.name === 'AMAZON.NoIntent'){
+      answer = 'no';
+    }
+    let speechText = `Your answer is ${answer}`;
+
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withShouldEndSession(false)
+      .getResponse();
+  },
+};
+
 
 /* BMI Calculator */
 const BMIIntentHandler = {
@@ -764,9 +833,42 @@ const BMIIntentHandler = {
     const request = handlerInput.requestEnvelope.request;
     let weightValue = isSlotValid(request,'weight');
     let heightValue = isSlotValid(request,'height');
+    //let nameValue = isSlotValid(request,'name');
     let speechText = '';
     let attr;
-    
+ 
+/*
+    if(!nameValue){
+      speechText = getRandom(session.lastUserPrompt, [
+        'Are you a registered user?'
+      ]);
+      attr = {lastUserPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+
+      imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/UwBMI";
+
+      if (supportsDisplay(handlerInput) ) {
+        const myImage = new Alexa.ImageHelper()
+        .addImageInstance(imgAddress)
+        .getImage();
+     
+      const primaryText = new Alexa.RichTextContentHelper()
+        .withSecondaryText(speechText)
+        .getTextContent();
+
+        return handlerInput.responseBuilder
+        .addRenderTemplateDirective({
+          type: 'BodyTemplate2',
+          token: 'string',
+          backButton: 'HIDDEN',
+          backgroundImage:myImage,
+          textContent: primaryText
+        })
+        .speak(speechText)
+        .getResponse();
+      }
+    }
+    */
     /* Get Age of user */
     if(!weightValue) {
       speechText = getRandom(session.lastWeightPrompt, [
@@ -828,19 +930,20 @@ try {
         weightCategoryOutput = '. You are extremely obese.';
         imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/ObBMI";
     }
-    speechText = 'Your BMI is ' + bmiRounded;
+    bmidisplaytext = 'BMI : ' + bmiRounded;
+    speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput
     } catch(err) {
       console.log(err);
     }
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
-        .addImageInstance(imgAddress)
-        .getImage();
-     
-      const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(speechText)
-        .getTextContent();
-        
+      .addImageInstance(imgAddress)
+      .getImage();
+   
+    const primaryText = new Alexa.RichTextContentHelper()
+      .withSecondaryText(bmidisplaytext)
+      .getTextContent();
+
       handlerInput.responseBuilder.addRenderTemplateDirective({
         type: 'BodyTemplate2',
         token: 'string',
@@ -943,7 +1046,7 @@ const BMRIntentHandler = {
     let age = currentIntent.slots['userage'].value;
     let gender = genderValue;
 
-    imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/BMRBMR";
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/BMRlaunch";
 
     
 try {
@@ -970,14 +1073,14 @@ try {
         .getImage();
      
       const primaryText = new Alexa.RichTextContentHelper()
-        .withSecondaryText(speechText)
+        .withPrimaryText(speechText)
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
         type: 'BodyTemplate2',
         token: 'string',
         backButton: 'HIDDEN',
-        image: myImage,
+        backgroundImage: myImage,
         textContent: primaryText
       });
   }
@@ -1139,11 +1242,6 @@ const FoodSearchIntentHandler = {
       lastFoodResult: results
     };
 
-    
-    //var other = 100 - (proteinatt+fatatt+sugaratt+carbatt);
-
-
-    //var imgAddress = "https://ka1901.scem.westernsydney.edu.au/userpage.php?query=Alex#_ABSTRACT_RENDERER_ID_1"
   var imgAddress = "https://chart.googleapis.com/chart?chco=1446A0|DB3069|F5D547|5B3758&chs=480x400&chf=bg,s,65432100&chd=t:";
     imgAddress += proteinatt;
     imgAddress += ",";
@@ -1152,116 +1250,11 @@ const FoodSearchIntentHandler = {
     imgAddress += sugaratt;
     imgAddress += ","
     imgAddress += carbatt;
-    //imgAddress += ","
-    //imgAddress += other;
     imgAddress += "&cht=p&chl=Protein|Fat|Sugar|Carbs";
-    
-
-/*
-var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?protein=";
-    imgAddress += proteinatt;
-    imgAddress += "&fat=";
-    imgAddress += fatatt;
-    imgAddress += "&sugar="
-    imgAddress += sugaratt;
-    imgAddress += "&carbs="
-    imgAddress += carbatt;
-    */
-  //var nextline = " Grams";
 
    var Displaytext = "Protein: " + proteinatt + " Fat: " + fatatt +  " Sugar: " + sugaratt + " Carbs: " + carbatt;
-   //var testing = "test";
- /*
-     if (supportsDisplay(handlerInput) ) {
-       const myImage = new Alexa.ImageHelper()
-         .addImageInstance(imgAddress)
-         .getImage();
-      
-     const primaryText = new Alexa.RichTextContentHelper()
-         .withTertiaryText(Displaytext)
-         .getTextContent();
-         
-       handlerInput.responseBuilder.addRenderTemplateDirective({
-         type: 'ListTemplate1',
-         token: 'string',
-         backButton: 'HIDDEN',
-         image: myImage,
-         title: `${results.name}`,
-         listItems:[
-           {
-             token: 'item_1',
-             textContent:{
-               primaryText:{
-                 type:'RichText',
-                 text:'<font size="5">Protein</font>'
-               },
-               secondaryText: {
-                 type: "PlainText",
-                 text: "Serving Size: 100grams"
-               },
-               tertiaryText: {
-                 type: "PlainText",
-                 text: proteinatt + ' Grams'
-             }
-           }
-           },
-           {
-             token: 'item_2',
-             textContent:{
-               primaryText:{
-                 type:'RichText',
-                 text:'<font size="5">Fat</font>'
-               },
-               secondaryText: {
-                 type: "PlainText",
-                 text: "Serving Size: 100grams"
-               },
-               tertiaryText: {
-                 type: "PlainText",
-                 text: fatatt + ' Grams'
-               }
-             }
-           },
-           {
-             token: 'item_3',
-             textContent:{
-               primaryText:{
-                 type:'RichText',
-                 text:'<font size="5">Sugar</font>'
-               },
-               secondaryText: {
-                 type: "PlainText",
-                 text: "Serving Size: 100grams"
-               },
-               tertiaryText: {
-                 type: "PlainText",
-                 text:  sugaratt + ' Grams'
-               }
-             }
-           },
-           {
-             token: 'item_4',
-             textContent:{
-               primaryText:{
-                 type:'RichText',
-                 text:'<font size="5">Carbs</font>' 
-               },
-               secondaryText: {
-                 type: "PlainText",
-                 text: "Serving Size: 100grams"
-               },
-               tertiaryText: {
-                 type: "PlainText",
-                 text: carbatt + ' Grams'
-               }
-             }
-           }
-         ]
-       });
-   }
-*/
 
-   bimageaddr = "https://www.splitshire.com/wp-content/uploads/2014/11/SplitShire-03692-1800x1200.jpg";
+   bimageaddr = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/graph";
 
     addSessionValues(attr, handlerInput);
     try {
@@ -1289,6 +1282,7 @@ var imgAddress = "https://ka1901.scem.westernsydney.edu.au/PieGenerator.php?prot
         backButton: 'HIDDEN',
         backgroundImage:bimage,
         image: myImage,
+        title: `${results.name}`,
         textContent: primaryText
       });
     }
@@ -1361,7 +1355,7 @@ const WhatisBMIintentHandler = {
             ' The BMI is an attempt to quantify the amount of tissue mass in an individual, and then categorize ' + 
             'that person as underweight, normal weight, overweight, or obese based on that value';
 
-            imgAddress = "https://images.iphonephotographyschool.com/22702/1120b/How-To-Blur-Background-On-iPhone.jpg";
+            imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/FINALBMI2";
             if (supportsDisplay(handlerInput) ) {
               const myImage = new Alexa.ImageHelper()
                 .addImageInstance(imgAddress)
@@ -1379,7 +1373,6 @@ const WhatisBMIintentHandler = {
                 textContent: primaryText
               });
           }
-
 
     return handlerInput.responseBuilder
       .speak(speechText)
@@ -1402,7 +1395,7 @@ const WhatisBMRintentHandler = {
     'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
     'height. This will ensure you’re getting an adequate amount of energy from your overall diet';
 
-    imgAddress = "https://images.iphonephotographyschool.com/22702/1120b/How-To-Blur-Background-On-iPhone.jpg";
+    imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/FinalBMR2";
     if (supportsDisplay(handlerInput) ) {
       const myImage = new Alexa.ImageHelper()
         .addImageInstance(imgAddress)
@@ -1413,7 +1406,7 @@ const WhatisBMRintentHandler = {
         .getTextContent();
         
       handlerInput.responseBuilder.addRenderTemplateDirective({
-        type: 'BodyTemplate2',
+        type: 'BodyTemplate1',
         token: 'string',
         backButton: 'HIDDEN',
         backgroundImage: myImage,
@@ -1757,7 +1750,6 @@ const ErrorHandler = {
   },
 };
 
-
 function supportsDisplay(handlerInput) {
   var hasDisplay =
     handlerInput.requestEnvelope.context &&
@@ -1769,7 +1761,6 @@ function supportsDisplay(handlerInput) {
 
 }
 
-
 /* the lambda function entrypoint, this is where everything is assigned and actually run */
 const skillBuilder = Alexa.SkillBuilders.custom();
 
@@ -1778,6 +1769,7 @@ exports.handler = skillBuilder
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
     RegisterFoodIntentHandler,
+    YesNoIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,

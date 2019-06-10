@@ -8,6 +8,14 @@
           "samples": []
       },
       {
+         "name": "AMAZON.YesIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+      },
+      {
           "name": "AMAZON.MoreIntent",
           "samples": []
       },
@@ -476,6 +484,10 @@
             {
               "name": "height",
               "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
             }
           ],
           "samples": [
