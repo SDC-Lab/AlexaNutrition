@@ -445,7 +445,7 @@ function httpGetUpdate(info) {
 }
 
 function httpGet2(info) {
-  request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api2/alexa/routes/api/fooddata', form: info }, function (err, httpResponse, body) {
+  request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/fooddata', form: info }, function (err, httpResponse, body) {
       if (err) { return console.log(err); }
       console.log(body);
   });
@@ -789,7 +789,7 @@ const AddUserIntentHandler = {
         textContent: primaryText
       });
     }
-  
+    
     return handlerInput.responseBuilder
       .speak(speechText)
       .withSimpleCard('Name: ' + nameValue + '\nGender: ' + genderValue + '\nAge : ' + ageValue + '\nWeight : ' + weightValue + '\nHeight : ' + heightValue)
@@ -928,7 +928,7 @@ try {
     else
     {
         weightCategoryOutput = '. You are extremely obese.';
-        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/ObBMI";
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/oBMI";
     }
     bmidisplaytext = 'BMI : ' + bmiRounded;
     speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput
@@ -1355,7 +1355,7 @@ const WhatisBMIintentHandler = {
             ' The BMI is an attempt to quantify the amount of tissue mass in an individual, and then categorize ' + 
             'that person as underweight, normal weight, overweight, or obese based on that value';
 
-            imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/FINALBMI2";
+            imgAddress = "https://ka1901.scem.westernsydney.edu.au/MAINIMAGES/BMIlaunch";
             if (supportsDisplay(handlerInput) ) {
               const myImage = new Alexa.ImageHelper()
                 .addImageInstance(imgAddress)
@@ -1390,8 +1390,8 @@ const WhatisBMRintentHandler = {
   handle(handlerInput) {
     let speechText = '';
     speechText = '' +
-    'BMR stands for Basal Metabolic Rate. It is also knwon as Recommended Daily intake. It is the ' + 
-    'total number of calories that your body needs to perform basic, life-sustaining functions. The BMR ' + 
+    'BMR stands for Basal Metabolic Rate. It is also knownn as Recommended Daily intake. It is the ' + 
+    'total number of calories that your body needs to perform basic life-sustaining functions. The BMR ' + 
     'recommends the amount of kilocalories you should consume according to your age, gender, weight and '+
     'height. This will ensure you’re getting an adequate amount of energy from your overall diet';
 
