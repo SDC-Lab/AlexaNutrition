@@ -502,8 +502,22 @@
             "BMI calculation",
             "Body mass calculator",
             "I would like to know my BMI",
-            "Launch BMI",
-            "What is my BMI"
+            "Launch BMI"
+          ]
+        },
+        {
+          "name": "RegUserBMIintent",
+          "slots": [
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
+            }
+          ],
+          "samples": [
+            "Registered User BMI",
+            "What is my BMI",
+            "Tell me my BMI",
+            "I would like to access my BMI"
           ]
         },
         {

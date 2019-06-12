@@ -378,7 +378,7 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     let session = handlerInput.attributesManager.getSessionAttributes();
     let speechText = getRandom(session.lastWelcomeResponse, [
-      'Hi, I can calculate your body mass, register meals or search for nutrtion information.'
+      'Hi, I can calculate your body mass, record meals or search for nutrtion information.'
     ]);
 
     var DisplayText = "Getting Started: Say 'Check BMI', 'Check BMR', 'Register User', 'Tell me facts about Spaghetti'";
@@ -428,6 +428,8 @@ const LaunchRequestHandler = {
   },
 };
 
+
+/* Laravel Function to input users */
 function httpGet(info) {
   request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata', form: info }, function (err, httpResponse, body) {
       if (err) { return console.log(err); }
@@ -435,7 +437,7 @@ function httpGet(info) {
   });
 }
 
-
+/* Laravel Function to update users*/
 function httpGetUpdate(info) {
   console.log("come this area1");
   request.post({ url: `https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata/${info.name}`, form: info }, function (err, httpResponse, body) {
@@ -444,6 +446,7 @@ function httpGetUpdate(info) {
   });
 }
 
+/* Laravel Function to input food data*/
 function httpGet2(info) {
   request.post({ url: 'https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/fooddata', form: info }, function (err, httpResponse, body) {
       if (err) { return console.log(err); }
@@ -451,6 +454,8 @@ function httpGet2(info) {
   });
 }
 
+/* Function to log meals (NOT WORKING) */
+/*
 const LogMealIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -458,11 +463,12 @@ const LogMealIntentHandler = {
       && handlerInput.requestEnvelope.request !== 'COMPLETED';
   },
   async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
     const currentIntent = handlerInput.requestEnvelope.request.intent;
     const request = handlerInput.requestEnvelope.request;
     let UserValue = isSlotValid(request, 'userID');
     let FoodValue = isSlotValid(request, 'Food');
-    let speechText = '';
+    let speechText, attr, results, attributeValue;
 
     let userID = currentIntent.slots['userID'].value;
     let Food = currentIntent.slots['Food'].value;
@@ -477,23 +483,39 @@ const LogMealIntentHandler = {
     } 
 
     if(!FoodValue) {
-      speechText = 'What is the name of the food?'; 
+      speechText = getRandom(session.lastFoodItemPrompt, [
+        'What food item would you like me to search for?',
+        'Can you tell me the name of the food item you want searched for?',
+        'Tell me the name if the food item you want searched for',
+        'What was the food item you want searched for?',
+        'I need the name of a food item to search for'
+      ]);
+      attr = {lastFoodItemPrompt: speechText}
+      addSessionValues(attr, handlerInput);
       return handlerInput.responseBuilder
         .speak(speechText)
         .addElicitSlotDirective('Food', currentIntent)
         .withShouldEndSession(false)
         .getResponse();
     } 
-    
+
+    results = await searchFoodItem(currentIntent.slots['Food'].value);
+    results = normalizeWeights("100", results); 
+    speechText = buildFoodSearchResponse(results, handlerInput, attributeValue);
+    attr = { 
+      lastFoodItemResponse: speechText,
+      lastFoodResult: results
+    };
+    speechText = 'Registering food!' + "Protein: " + proteinatt + " Fat: " + fatatt +  " Sugar: " + sugaratt + " Carbs: " + carbatt;
     var info = {
       userID:userID,
       Food:Food
     };
 
     httpGet2(info);
-
+    addSessionValues(attr, handlerInput);
     try {
-      speechText = 'Registering food!'
+      saveSearchResult(results);
     } catch(err) {
       console.log(err);
     }
@@ -503,6 +525,111 @@ const LogMealIntentHandler = {
       .getResponse();
   },
 }
+*/
+
+/* BMI Calculator for registered user (NOT WORKING)*/
+/*
+const RegisteredUserBMI = {
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === 'IntentRequest'
+      && handlerInput.requestEnvelope.request.intent.name === 'RegUserBMIintent'
+      && handlerInput.requestEnvelope.request !== 'COMPLETED';
+  },
+  async handle(handlerInput) {
+    const session = handlerInput.attributesManager.getSessionAttributes();
+    const currentIntent = handlerInput.requestEnvelope.request.intent;
+    const request = handlerInput.requestEnvelope.request;
+    let nameValue = isSlotValid(request,'name');
+    let speechText = '';
+    let attr;
+    const weight = 0;
+    const height = 0;
+
+    if(!nameValue){
+      speechText = getRandom(session.lastUserPrompt, [
+        'Hi there, Can I get your name so I can calculate your BMI?'
+      ]);
+      attr = {lastUserPrompt: speechText};
+      addSessionValues(attr, handlerInput);
+
+        return handlerInput.responseBuilder
+        .speak(speechText)
+        .addElicitSlotDirective('name', currentIntent)
+        .withShouldEndSession(false)
+        .getResponse();
+      }
+  
+    let name = currentIntent.slots['name'].value;
+
+
+    request.get('https://ka1901.scem.westernsydney.edu.au/api/alexa/public/api/userdata/'+ name)
+		.on('response', function(response) {
+		    weight = response.Weight;
+        height = response.Height;
+		    
+		});
+  
+try {
+    const newHeight = height / 100;
+    var bmi = weight / (newHeight * newHeight);
+    const bmiRounded = Math.round(bmi * 10) / 10;
+    let weightCategoryOutput = '';
+    
+    if(bmi < 18.5)
+    {
+        weightCategoryOutput = '. You are underweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/UwBMI";
+    }
+    else if (bmi >= 18.5 && bmi <= 24.9)
+    {
+        weightCategoryOutput = '. You have a healthy weight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/hBMI";
+    }
+    else if (bmi > 24.9 &&  bmi <= 29.9)
+    {
+        weightCategoryOutput = '. You are overweight.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/ovBMI";
+    }
+    else if (bmi > 29.9 &&  bmi <= 34.9)
+    {
+        weightCategoryOutput = '. You are obese.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/oBMI";
+    }
+    else
+    {
+        weightCategoryOutput = '. You are extremely obese.';
+        imgAddress = "https://ka1901.scem.westernsydney.edu.au/TRYIMAGES/oBMI";
+    }
+    bmidisplaytext = 'BMI : ' + bmiRounded;
+    speechText = 'Your BMI is ' + bmiRounded + weightCategoryOutput
+    } catch(err) {
+      console.log(err);
+    }
+    if (supportsDisplay(handlerInput) ) {
+      const myImage = new Alexa.ImageHelper()
+      .addImageInstance(imgAddress)
+      .getImage();
+   
+    const primaryText = new Alexa.RichTextContentHelper()
+      .withSecondaryText(bmidisplaytext)
+      .getTextContent();
+
+      handlerInput.responseBuilder.addRenderTemplateDirective({
+        type: 'BodyTemplate2',
+        token: 'string',
+        backButton: 'HIDDEN',
+        backgroundImage:myImage,
+        textContent: primaryText
+      });
+    }
+  
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withShouldEndSession(false)
+        .getResponse();
+    },
+  }
+*/
 
 
 /* Update user details */
@@ -556,6 +683,7 @@ const updateUserIntentHandler = {
         .withShouldEndSession(false)
         .getResponse();
     }
+    /* Take varying user input and assign it to something we can work with */
     genderValue = getGender(genderValue);
 
     /* Get Age of user */
@@ -798,7 +926,7 @@ const AddUserIntentHandler = {
   },
 };
 
-
+/*
 const YesNoIntentHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'IntentRequest'
@@ -818,7 +946,7 @@ const YesNoIntentHandler = {
       .getResponse();
   },
 };
-
+*/
 
 /* BMI Calculator */
 const BMIIntentHandler = {
@@ -1750,6 +1878,7 @@ const ErrorHandler = {
   },
 };
 
+/* Function to check if there is a display on the device*/
 function supportsDisplay(handlerInput) {
   var hasDisplay =
     handlerInput.requestEnvelope.context &&
@@ -1768,8 +1897,8 @@ exports.handler = skillBuilder
   .addRequestHandlers(
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
+    RegisteredUserBMI,
     RegisterFoodIntentHandler,
-    YesNoIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
