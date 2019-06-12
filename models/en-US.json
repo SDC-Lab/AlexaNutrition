@@ -8,6 +8,14 @@
           "samples": []
       },
       {
+         "name": "AMAZON.YesIntent",
+          "samples": []
+      },
+      {
+          "name": "AMAZON.NoIntent",
+          "samples": []
+      },
+      {
           "name": "AMAZON.MoreIntent",
           "samples": []
       },
@@ -315,6 +323,22 @@
           ]
         },
         {
+          "name": "LogMealIntent",
+          "slots": [
+            {
+              "name": "userID",
+              "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "Food",
+              "type": "AMAZON.Food"
+            }
+          ],
+          "samples": [
+            "Register food"
+          ]
+        },
+        {
           "name": "NutrientWhatIsIntent",
           "slots": [
             {
@@ -446,6 +470,9 @@
             "I would like to know my BMR",
             "BMR Calculation",
             "check BMR",
+            "Calculate BMR",
+            "Calculate my BMR",
+            "BMR Calculator",
             "BMR calc",
             "Launch BMR"
           ]
@@ -460,16 +487,37 @@
             {
               "name": "height",
               "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
             }
           ],
           "samples": [
             "BMI Calculator",
             "bmi",
             "check bmi",
+            "Calculate BMI",
+            "BMI Calculator",
+            "BMI calculation",
             "Body mass calculator",
             "I would like to know my BMI",
-            "Launch BMI",
-            "What is my BMI"
+            "Launch BMI"
+          ]
+        },
+        {
+          "name": "RegUserBMIintent",
+          "slots": [
+            {
+              "name": "name",
+              "type": "AMAZON.US_FIRST_NAME"
+            }
+          ],
+          "samples": [
+            "Registered User BMI",
+            "What is my BMI",
+            "Tell me my BMI",
+            "I would like to access my BMI"
           ]
         },
         {
