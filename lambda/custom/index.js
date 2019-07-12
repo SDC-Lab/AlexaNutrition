@@ -1897,13 +1897,11 @@ exports.handler = skillBuilder
   .addRequestHandlers(
     /* our custom built intent handlers */
     FoodSearchIntentHandler,
-    RegisteredUserBMI,
     RegisterFoodIntentHandler,
     MoreInformationIntentHandler,
     HelpIntentHandler,
     DailyNutrientIntakeIntentHandler,
     AddUserIntentHandler,
-    LogMealIntentHandler,
     BMIIntentHandler,
     NutrientWhatIsHandler,
     NutrientWhereIsHandler,
