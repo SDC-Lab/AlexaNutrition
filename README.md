@@ -3,8 +3,8 @@ Repo for our WSU professional experience project building an Alexa voice interfa
 
 GROUP NAME: KA1901
 
-REST API Key - ed9c317b104b4017a1eba0b7d0911e15\
-REST API Shared Secret - 357873c14ef943399eef3f76ca45e3b8
+REST API Key - ########
+REST API Shared Secret - ########
 
 Instructions for Setting up local Alexa dev environment. We will use windows as it will save people having to set up linux environments.
 
